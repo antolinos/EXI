@@ -10,11 +10,11 @@ function MXDataCollectionGrid(args) {
     /** DATACOLLECTION, DATACOLLECTION_COLLAPSED, PLATES_VIEW */
     this.renderingType = 'DATACOLLECTION';
 
-    this.uncollapsedDataCollectionGrid = new UncollapsedDataCollectionGrid();
-    this.collapsedDataCollectionGrid = new CollapsedDataCollectionGrid();
+    this.sessionSummaryDataCollectionGrid = new SessionSummaryDataCollectionGrid();
+    this.dataCollectionSummaryGrid = new DataCollectionSummaryGrid();
     this.containersDataCollectionGrid = new ContainersDataCollectionGrid();  
                                                                     
-    this.activePanel = this.uncollapsedDataCollectionGrid;
+    this.activePanel = this.sessionSummaryDataCollectionGrid;
 }
 
 MXDataCollectionGrid.prototype.getPanel = function(dataCollectionGroup) {
@@ -48,13 +48,13 @@ MXDataCollectionGrid.prototype.getToolBar = function() {
             text: 'Session summary',
             handler: function(){
                 _this.renderingType = "DATACOLLECTION";
-                onMenuClicked(_this.uncollapsedDataCollectionGrid);
+                onMenuClicked(_this.sessionSummaryDataCollectionGrid);
             }
         },{
             text: 'Data collections summary',            
             handler: function(){
                 _this.renderingType = "DATACOLLECTION_COLLAPSED";
-                onMenuClicked(_this.collapsedDataCollectionGrid);
+                onMenuClicked(_this.dataCollectionSummaryGrid);
             }
         },{
             text: 'Containers',            

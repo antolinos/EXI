@@ -4,15 +4,15 @@
 * @class MXDataCollectionGrid
 * @constructor
 */
-function UncollapsedDataCollectionGrid(args) {
+function SessionSummaryDataCollectionGrid(args) {
     this.id = BUI.id();
     this.template = "mxdatacollectiongrid.template";
     DataCollectionGrid.call(this,args);
 }
 
-UncollapsedDataCollectionGrid.prototype._getAutoprocessingStatistics = DataCollectionGrid.prototype._getAutoprocessingStatistics;
-UncollapsedDataCollectionGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
-UncollapsedDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.prototype.loadMagnifiers;
+SessionSummaryDataCollectionGrid.prototype._getAutoprocessingStatistics = DataCollectionGrid.prototype._getAutoprocessingStatistics;
+SessionSummaryDataCollectionGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
+SessionSummaryDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.prototype.loadMagnifiers;
 
 /**
 * Loads the store and load the maginifiers
@@ -20,7 +20,7 @@ UncollapsedDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.prot
 * @method load
 * @return {dataCollectionGroup} Array of data collections
 */
-UncollapsedDataCollectionGrid.prototype.load = function(dataCollectionGroup){
+SessionSummaryDataCollectionGrid.prototype.load = function(dataCollectionGroup){
     try{
         
         var _this = this;
@@ -34,7 +34,7 @@ UncollapsedDataCollectionGrid.prototype.load = function(dataCollectionGroup){
     }
 };
 
-UncollapsedDataCollectionGrid.prototype.getPanel = function(){
+SessionSummaryDataCollectionGrid.prototype.getPanel = function(){
     var _this = this;
     this.panel = Ext.create('Ext.grid.Panel', {
         border: 1,        
@@ -58,7 +58,7 @@ UncollapsedDataCollectionGrid.prototype.getPanel = function(){
 * @param {Integer} dataCollectionGroupId 
 * @method displayDataCollectionTab
 */
-UncollapsedDataCollectionGrid.prototype.displayDataCollectionTab = function(target, dataCollectionGroupId) {
+SessionSummaryDataCollectionGrid.prototype.displayDataCollectionTab = function(target, dataCollectionGroupId) {
     var _this = this;
     var onSuccess = function(sender, data){
        
@@ -67,7 +67,7 @@ UncollapsedDataCollectionGrid.prototype.displayDataCollectionTab = function(targ
             value.urlImageQualityIndicators = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(value.dataCollectionId);
             // Result from auto-processing>                     
             
-            value.onlineresults = UncollapsedDataCollectionGrid.prototype._getAutoprocessingStatistics(value);
+            value.onlineresults = SessionSummaryDataCollectionGrid.prototype._getAutoprocessingStatistics(value);
             if (value.onlineresults && value.onlineresults.length > 0){
                 value.bestAutoprocIntegrationId = value.onlineresults[0].autoProcIntegrationId;
             }
@@ -110,7 +110,7 @@ UncollapsedDataCollectionGrid.prototype.displayDataCollectionTab = function(targ
 * @param {Integer} dataCollectionGroupId 
 * @method displayDataCollectionTab
 */
-UncollapsedDataCollectionGrid.prototype.displayResultAutoprocessingTab = function(target, dataCollectionId) {
+SessionSummaryDataCollectionGrid.prototype.displayResultAutoprocessingTab = function(target, dataCollectionId) {
     var _this = this;
     var onSuccess = function(sender, data){            
         /** Parsing data */
@@ -187,7 +187,7 @@ UncollapsedDataCollectionGrid.prototype.displayResultAutoprocessingTab = functio
 * @param {Integer} dataCollectionId 
 * @method displayWorkflowsTab
 */
-UncollapsedDataCollectionGrid.prototype.displayWorkflowsTab = function(target, dataCollectionId) {
+SessionSummaryDataCollectionGrid.prototype.displayWorkflowsTab = function(target, dataCollectionId) {
    var dc =_.find(grid.dataCollectionGroup, {"DataCollection_dataCollectionId":Number(dataCollectionId)});
    var _this = this;
     if (dc){
@@ -209,7 +209,7 @@ UncollapsedDataCollectionGrid.prototype.displayWorkflowsTab = function(target, d
 * @param {String} PhasingStep_method [SAD | MR ] 
 * @method displayWorkflowsTab
 */
-UncollapsedDataCollectionGrid.prototype.displayPhasingTab = function(target, dataCollectionGroupId, PhasingStep_method) {
+SessionSummaryDataCollectionGrid.prototype.displayPhasingTab = function(target, dataCollectionGroupId, PhasingStep_method) {
     var phasingGridView = new PhasingGridView();    
     phasingGridView.load(dataCollectionGroupId,PhasingStep_method);
     phasingGridView.printHTML(target);
@@ -223,7 +223,7 @@ UncollapsedDataCollectionGrid.prototype.displayPhasingTab = function(target, dat
 * @param {Integer} dataCollectionId 
 * @method displaySampleTab
 */
-UncollapsedDataCollectionGrid.prototype.displaySampleTab = function(target, dataCollectionId) {                 
+SessionSummaryDataCollectionGrid.prototype.displaySampleTab = function(target, dataCollectionId) {                 
     var dc =_.find(grid.dataCollectionGroup, {"DataCollection_dataCollectionId":Number(dataCollectionId)});
     if (dc){
         /** Loading crystal snapshots within the DIV with id = sa_{.DataCollection_dataCollectionId}_crystal_snapshots */
@@ -297,7 +297,7 @@ UncollapsedDataCollectionGrid.prototype.displaySampleTab = function(target, data
 *
 * @method attachCallBackAfterRender
 */
-UncollapsedDataCollectionGrid.prototype.attachCallBackAfterRender = function() {
+SessionSummaryDataCollectionGrid.prototype.attachCallBackAfterRender = function() {
     
     var _this = this;                              
 
@@ -383,7 +383,7 @@ UncollapsedDataCollectionGrid.prototype.attachCallBackAfterRender = function() {
 * @param Integer id The id
 * @param String mode To edit the dataCollection comment use DATACOLLECTION and to edit the dataCollectionGroup comment use DATACOLLECTIONGROUP
 */
-UncollapsedDataCollectionGrid.prototype.editComments = function (id,mode) {
+SessionSummaryDataCollectionGrid.prototype.editComments = function (id,mode) {
     var comment = $("#comments_" + id).html().trim();
     var commentEditForm = new CommentEditForm({mode : mode});
     commentEditForm.onSave.attach(function(sender,comment) {

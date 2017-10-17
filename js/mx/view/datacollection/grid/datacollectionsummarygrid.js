@@ -4,18 +4,18 @@
 * @class MXDataCollectionGrid
 * @constructor
 */
-function CollapsedDataCollectionGrid(args) {
+function DataCollectionSummaryGrid(args) {
     this.template = "collapsed.mxdatacollectiongrid.template";
     DataCollectionGrid.call(this,args);
 }
 
-CollapsedDataCollectionGrid.prototype._getAutoprocessingStatistics = DataCollectionGrid.prototype._getAutoprocessingStatistics;
-CollapsedDataCollectionGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
-CollapsedDataCollectionGrid.prototype.load = DataCollectionGrid.prototype.load;
-CollapsedDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.prototype.loadMagnifiers;
-CollapsedDataCollectionGrid.prototype.getPanel = DataCollectionGrid.prototype.getPanel;
+DataCollectionSummaryGrid.prototype._getAutoprocessingStatistics = DataCollectionGrid.prototype._getAutoprocessingStatistics;
+DataCollectionSummaryGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
+DataCollectionSummaryGrid.prototype.load = DataCollectionGrid.prototype.load;
+DataCollectionSummaryGrid.prototype.loadMagnifiers = DataCollectionGrid.prototype.loadMagnifiers;
+DataCollectionSummaryGrid.prototype.getPanel = DataCollectionGrid.prototype.getPanel;
 
-CollapsedDataCollectionGrid.prototype.onBoxReady = function () {
+DataCollectionSummaryGrid.prototype.onBoxReady = function () {
     var _this = this;
     var setClickListeners = function() {
         $(".download-results").click(function(sender){
