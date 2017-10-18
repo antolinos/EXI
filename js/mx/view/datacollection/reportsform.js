@@ -1,4 +1,4 @@
-function ReportsForm(args) {
+/*function ReportsForm(args) {
     this.id = BUI.id();
 
     this.templateData = {id : this.id};
@@ -89,3 +89,4 @@ ReportsForm.prototype.downloadHTML = function(html,fileName) {
 
     saveAs(blob,fileName);
 };
+*/

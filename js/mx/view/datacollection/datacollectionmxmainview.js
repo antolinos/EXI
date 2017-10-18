@@ -20,21 +20,28 @@ function DataCollectionMxMainView(args) {
     this.xfeScanGrid = new XFEScanGrid();
 }
 
-DataCollectionMxMainView.prototype.getPanel = MainView.prototype.getPanel;
+//DataCollectionMxMainView.prototype.getPanel = MainView.prototype.getPanel;
 
-DataCollectionMxMainView.prototype.getContainer = function() {
+DataCollectionMxMainView.prototype.getPanel = function() {
     var _this = this;
-    this.container = Ext.create('Ext.tab.Panel', {   
+    var html = "";
+    dust.render("datacollectionmxmainview.template", [], function(err, out) {                                                                                   
+                html = out
+    });
+
+    return [
+    {
+               html : html//this.genericDataCollectionPanel.getPanel()
+
+    }];
+    //this.container = Ext.create('Ext.tab.Panel', {   
+    /*this.container = Ext.create('Ext.panel.Panel', {   
     minHeight : 900,    
     padding : "5 40 0 5",
-    items: [ {
-                    title: 'Data Collections',
-                    cls : 'border-grid',
-                    id : this.id + "_dataCollectionTab",                        
-                    items:[
+    items: [
                         this.genericDataCollectionPanel.getPanel()
-                    ]
-            }, 
+                   
+            , 
             {
                     title: 'Energy Scans',
                     cls : 'border-grid',
@@ -51,31 +58,9 @@ DataCollectionMxMainView.prototype.getContainer = function() {
                         this.xfeScanGrid.getPanel()
                     ]
             },
-        ],
-        listeners: {
-            afterrender: function(panel){
-                var bar = panel.tabBar;
-                bar.insert(3,[
-                    {
-                        xtype: 'component',
-                        flex: 1
-                    },
-                    {
-                        html: '<span class="glyphicon glyphicon-download-alt"></span> Reports',
-                        padding: '10px',
-                        hidden : true,
-                        closable : false,
-                        handler : function (sender,target) {
-                            var reportsForm = new ReportsForm();
-                            reportsForm.load(_this.sessionId,_this.proposal,_this.genericDataCollectionPanel.dataCollectionGroup,_this.energyScanGrid.energyScanList,_this.xfeScanGrid.data);
-                            reportsForm.show();
-                        }
-                    },               
-                ]);
-            }
-        }
+        ]
     });
-    return this.container;
+    return this.container;*/
 };
 
 DataCollectionMxMainView.prototype.loadEnergyScans = function(data) {
@@ -87,7 +72,8 @@ DataCollectionMxMainView.prototype.loadEnergyScans = function(data) {
         }
     }
     
-    Ext.getCmp(this.id + "_energyTab").setDisabled(true);
+    //Ext.getCmp(this.id + "_energyTab").setDisabled(true);
+    
 };
 
 DataCollectionMxMainView.prototype.loadFXEScans = function(data) {  
@@ -99,16 +85,16 @@ DataCollectionMxMainView.prototype.loadFXEScans = function(data) {
             }
         }
         
-    Ext.getCmp(this.id + "_xfeTab").setDisabled(true);
+    //Ext.getCmp(this.id + "_xfeTab").setDisabled(true);
 };
 
 DataCollectionMxMainView.prototype.loadProposal = function (proposal) {
-    this.panel.setTitle("");
+    //this.panel.setTitle("");
     this.proposal = proposal;
-    this.panel.setTitle(this.proposal.Proposal_proposalCode + this.proposal.Proposal_proposalNumber);
-    this.panel.tab.on('click',function(){
+    //this.panel.setTitle(this.proposal.Proposal_proposalCode + this.proposal.Proposal_proposalNumber);
+    /*this.panel.tab.on('click',function(){
         location.href = "#/welcome/manager/proposal/"+ proposal.Proposal_proposalCode + proposal.Proposal_proposalNumber +"/main";
-    });
+    });*/
 }
 
 DataCollectionMxMainView.prototype.loadCollections = function(dataCollections) {
@@ -145,7 +131,7 @@ DataCollectionMxMainView.prototype.loadCollections = function(dataCollections) {
                 console.log(error);
             }
         }
-        Ext.getCmp(this.id + "_dataCollectionTab").setTitle(data.length + " Data Collections");
+       // Ext.getCmp(this.id + "_dataCollectionTab").setTitle(data.length + " Data Collections");
 	    if (data){            
             this.genericDataCollectionPanel.load(data);
         }

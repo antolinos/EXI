@@ -194,12 +194,22 @@ Exi.prototype.addMainPanel = function(mainView) {
 		Ext.getCmp('main_panel').removeAll();
 	}
 	Ext.getCmp('main_panel').add(mainView.getPanel());
-	Ext.getCmp('main_panel').setActiveTab(Ext.getCmp('main_panel').items.length - 1);
+	//Ext.getCmp('main_panel').setActiveTab(Ext.getCmp('main_panel').items.length - 1);
 	
 	this.clearTimers();
 
     
 };
+
+Exi.prototype.insertHTML = function(mainView) {	
+	Ext.getCmp('main_panel').removeAll();	
+	
+	for (var i=0; i< mainView.getPanel().length; i++){	
+	      Ext.getCmp('main_panel').insert(mainView.getPanel()[i]);		
+	}
+	this.clearTimers();
+};
+
 
 Exi.prototype.addMainPanelWithTimer = function(mainView) {
 	if (!this.keepTabs){
@@ -340,7 +350,7 @@ Exi.prototype.show = function() {
 												{
 													region : 'center',
 													id : 'main_panel',
-													xtype : 'tabpanel',
+													xtype : 'panel',
 													cls : 'navigation',
 													plain : true,
 													items : []

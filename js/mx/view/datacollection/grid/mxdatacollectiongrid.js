@@ -18,23 +18,8 @@ function MXDataCollectionGrid(args) {
 }
 
 MXDataCollectionGrid.prototype.getPanel = function(dataCollectionGroup) {
-    var _this = this;
-
-    this.panel = Ext.create('Ext.panel.Panel', {  
-        id: this.id,
-        height : "50vh",
-        //tbar: this.getToolBar(),        
-        items: [  
-                {
-                    html : "Here it comes the toolbar: View, report and others"
-                },          
-                {
-                    html : _this.activePanel.getPanel(dataCollectionGroup)
-                }
-            ]
-     });
-   
-    return this.panel;
+    return  this.activePanel.getPanel(dataCollectionGroup);
+            
 };
 /*
 MXDataCollectionGrid.prototype.getToolBar = function() {

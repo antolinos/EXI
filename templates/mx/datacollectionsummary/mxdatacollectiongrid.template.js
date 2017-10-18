@@ -1,5 +1,5 @@
 {#.}
-
+ {?DataCollection_dataCollectionId}
 <div class="container-fluid" >
    <div class="panel with-nav-tabs panel-default">
       <div class="panel-heading clearfix">
@@ -258,4 +258,5 @@
    </div>
 </div>
 
+{/DataCollection_dataCollectionId}
 {/.}

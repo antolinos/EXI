@@ -116,44 +116,22 @@ SessionSummaryDataCollectionGrid.prototype.parseData = function(dataCollectionGr
 * @return {dataCollectionGroup} Array of data collections
 */
 SessionSummaryDataCollectionGrid.prototype.load = function(dataCollectionGroup){
-    try{
-        
-        this.dataCollectionGroup = dataCollectionGroup;
+    try{      
         var _this = this;
-        var parsedData =this.parseData(dataCollectionGroup);
-        var html = "";
-        dust.render(_this.template, parsedData, function(err, out) {                                                                       
+        this.dataCollectionGroup = dataCollectionGroup;              
+        dust.render(_this.template, this.parseData(dataCollectionGroup), function(err, out) {                                                                                   
                     $("#" + _this.id).html(out);
         });
-         
-       
-
-       
-
+                       
         this.loadMagnifiers(dataCollectionGroup);
-        this.attachCallBackAfterRender();
+        //this.attachCallBackAfterRender();
     }
     catch(e){
         console.log(e);
     }
 };
 
-SessionSummaryDataCollectionGrid.prototype.getPanel = function(){
-    
-    /*var _this = this;
-    this.panel = Ext.create('Ext.grid.Panel', {
-        border: 1,        
-        store: this.store,  
-        id: this.id,     
-         minHeight : 900,
-        disableSelection: true,
-        columns: this.getColumns(),
-        viewConfig: {
-            enableTextSelection: true,
-            stripeRows: false
-        }
-    });  
-    return this.panel;*/
+SessionSummaryDataCollectionGrid.prototype.getPanel = function(){  
       return "<div  style='background-color:green;overflow-y:scroll;height:100vh;' id='" + this.id +"'>"+this.id +"</div>"
 };
 

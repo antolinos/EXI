@@ -50,7 +50,7 @@ MxDataCollectionController.prototype.init = function() {
 
 	Path.map("#/mx/datacollection/session/:sessionId/main").to(function() {		
 		var mainView = new DataCollectionMxMainView({sessionId : this.params['sessionId']});
-		EXI.addMainPanel(mainView);
+		EXI.insertHTML(mainView);
         EXI.hideNavigationPanel();
 		EXI.setLoadingMainPanel(true);
 		var onSuccessProposal = function (sender,proposal) {
