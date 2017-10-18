@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">131.38</p>
+      <p class="stat">130.53</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">276</p>
+      <p class="stat">283</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">48.60</p>
+      <p class="stat">49.62</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.43</p>
+      <p class="stat">2.46</p>
     </div>
   </div>
 </div>
@@ -103,7 +103,7 @@ function ProposalManager() {
 /**
 * It gets the information of the proposals that are found on the local Storage in the field called proposal. If it does not exist it will load form the server and store them on the local storage
 * @method get
-* @param {Boolean} forceUpdate if true the proposals information will be reloaded from the server syncrhonously
+* @param {Boolean} forceUpdate if true the proposals information will be reloaded from the server asyncrhonously
 */
 ProposalManager.prototype.get = function(forceUpdate) {
     var _this = this;
@@ -113,7 +113,7 @@ ProposalManager.prototype.get = function(forceUpdate) {
 			localStorage.setItem(&quot;proposals&quot;, JSON.stringify(proposals));
             _this.onActiveProposalChanged.notify();
 		};
-		EXI.getDataAdapter({async : true, onSuccess : onSuccess}).proposal.proposal.getProposalsInfo();
+		EXI.getDataAdapter({async : false, onSuccess : onSuccess}).proposal.proposal.getProposalsInfo();
 	}	
   
 	return JSON.parse(localStorage.getItem(&quot;proposals&quot;));
@@ -170,7 +170,12 @@ ProposalManager.prototype.getBufferColors = function() {
 * @method getLabcontacts
 */
 ProposalManager.prototype.getLabcontacts = function() {
-	return this.get()[0].labcontacts;
+	var get = this.get();
+	if (get) {
+		return this.get()[0].labcontacts;
+	} else {
+		return [];
+	}
 };
 
 /**
@@ -282,9 +287,11 @@ ProposalManager.prototype.getMacromolecules = function() {
 ProposalManager.prototype.getProposals = function() {
 	var proposals = this.get();
 	var result = [];
-	for (var i = 0; i &lt; proposals.length; i++) {
-		proposals[i].proposal[0][&quot;proposal&quot;] = proposals[i].proposal[0].code + proposals[i].proposal[0].number;
-		result = result.concat(proposals[i].proposal);
+	if (proposals) {
+		for (var i = 0; i &lt; proposals.length; i++) {
+			proposals[i].proposal[0][&quot;proposal&quot;] = proposals[i].proposal[0].code + proposals[i].proposal[0].number;
+			result = result.concat(proposals[i].proposal);
+		}
 	}
 	return result;
 };

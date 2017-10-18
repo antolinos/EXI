@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">103.78</p>
+      <p class="stat">99.10</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">231</p>
+      <p class="stat">264</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">29.01</p>
+      <p class="stat">35.34</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.39</p>
+      <p class="stat">2.62</p>
     </div>
   </div>
 </div>
@@ -91,6 +91,9 @@
   <div class="row">
     <textarea id="file-source" class="col-md-12">function DataCollectionGrid(args) {
 
+    /** HashMap to store the image snapshot and its animated equivalent image gif **/
+    this.imageAnimatedURL = {};
+    
     this.store = Ext.create(&#039;Ext.data.Store&#039;, {
             fields: [&quot;dataCollectionGroup&quot;]
      });
@@ -107,6 +110,11 @@ DataCollectionGrid.prototype.loadMagnifiers = function(dataCollectionGroup){
             var elementId = dataCollectionGroup[i].DataCollection_dataCollectionId + &quot;_thumb&quot;;
             $(&#039;#&#039; + elementId).Lazy();
      }
+
+     
+    if (this.onBoxReady) {
+        this.onBoxReady();
+    }
 };
 
 /**
@@ -116,7 +124,7 @@ DataCollectionGrid.prototype.loadMagnifiers = function(dataCollectionGroup){
 * @return {dataCollectionGroup} Array of data collections
 */
 DataCollectionGrid.prototype.load = function(dataCollectionGroup){
-    try{
+    try{        
         this.store.loadData(dataCollectionGroup);
         this.loadMagnifiers(dataCollectionGroup);
     }
@@ -126,11 +134,11 @@ DataCollectionGrid.prototype.load = function(dataCollectionGroup){
 };
 
 DataCollectionGrid.prototype.getPanel = function (dataCollectionGroup) {
-    var _this = this;
     this.panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
         border: 1,        
         store: this.store,       
         disableSelection: true,
+       
         columns: this.getColumns(),
         viewConfig: {
             enableTextSelection: true,
@@ -139,6 +147,8 @@ DataCollectionGrid.prototype.getPanel = function (dataCollectionGroup) {
     });
 
     return this.panel;
+    
+  
 };
 
 
@@ -158,6 +168,7 @@ DataCollectionGrid.prototype._getAutoprocessingStatistics = function(data) {
 
     var autoProc_spaceGroups = getArrayValues(data.AutoProc_spaceGroups);
     var autoProcIds = getArrayValues(data.autoProcIds);
+    var autoProcIntegrationIds = getArrayValues(data.autoProcIntegrationId);
     var completenessList = getArrayValues(data.completenessList);
     var resolutionsLimitHigh = getArrayValues(data.resolutionsLimitHigh);
     var resolutionsLimitLow = getArrayValues(data.resolutionsLimitLow);
@@ -171,6 +182,9 @@ DataCollectionGrid.prototype._getAutoprocessingStatistics = function(data) {
     var cell_beta = getArrayValues(data.Autoprocessing_cell_beta);
     var cell_gamma = getArrayValues(data.Autoprocessing_cell_gamma);
 
+    var anomalous = getArrayValues(data.Autoprocessing_anomalous);
+    
+
     data = {};
     /** Returning if no autoprocs */
     if (autoProcIds) {
@@ -182,49 +196,41 @@ DataCollectionGrid.prototype._getAutoprocessingStatistics = function(data) {
         if (data[autoProcIds[i]] == null) {
             data[autoProcIds[i]] = {
                 autoProcId: autoProcIds[i],
-                spaceGroup: autoProc_spaceGroups[i]
+                autoProcIntegrationId: autoProcIntegrationIds[i],
+                spaceGroup: autoProc_spaceGroups[i],
+                anomalous: anomalous[i]
             };
         }
-
+        
         data[autoProcIds[i]][scalingStatisticsTypes[i]] = ({
             autoProcId: autoProcIds[i],
             scalingStatisticsType: scalingStatisticsTypes[i],
-            completeness: Number(completenessList[i]).toFixed(0),
-            resolutionsLimitHigh: Number(resolutionsLimitHigh[i]).toFixed(1),
-            resolutionsLimitLow: Number(resolutionsLimitLow[i]).toFixed(1),
-            rMerge: Number(rMerges[i]).toFixed(1),
+            completeness: Number(completenessList[i]),
+            resolutionsLimitHigh: Number(resolutionsLimitHigh[i]),
+            resolutionsLimitLow: Number(resolutionsLimitLow[i]),
+            rMerge: Number(rMerges[i]),
             spaceGroup: autoProc_spaceGroups[i],
             cell_a: cell_a[i],
             cell_b: cell_b[i],
             cell_c: cell_c[i],
             cell_alpha: cell_alpha[i],
             cell_beta: cell_beta[i],
-            cell_gamma: cell_gamma[i]
+            cell_gamma: cell_gamma[i],
+            anomalous : anomalous[i]
 
         });
 
     }
-
+    
     /** Convert from map to array */
     var ids = _.map(data, &#039;autoProcId&#039;);
     var result = [];
     for ( i = 0; i &lt; ids.length; i++) {
         result.push(data[ids[i]]);
     }
-
-    function sortByBest(a, b) {
-        var spaceGroupA = a.spaceGroup.replace(/\s/g, &quot;&quot;);
-        var spaceGroupB = b.spaceGroup.replace(/\s/g, &quot;&quot;);              
-        return (_.indexOf(ExtISPyB.spaceGroups, spaceGroupA) &gt; _.indexOf(ExtISPyB.spaceGroups, spaceGroupB));
-    }
-
-    var sorted = result.sort(sortByBest).reverse();    
-    /** Add new attribute for ranking order */
-    for ( i = 0; i &lt; sorted.length; i++) {
-        sorted[i][&quot;rank&quot;] = i + 1;
-    }
-
-    return sorted;
+    /** Rank results when anomouls is 0 */
+    return new AutoprocessingRanker().rank(_.filter(result, {anomalous : &#039;0&#039;}), &quot;spaceGroup&quot;);  
+   
 };
 
 
@@ -260,13 +266,8 @@ DataCollectionGrid.prototype.getColumns = function() {
                     }
                 }
                 catch(e){}
-                /** For Phasing */
-                
-                if (data.phasingStepType) {
-                    var phasingSteps = data.phasingStepType.split(&quot;,&quot;);
-                    data.phasingStepLength = phasingSteps.length;
-                
-                }
+               
+               
                 
                 /** For crystal */
                 data.xtal1 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(record.data.DataCollection_dataCollectionId, 1);
@@ -275,9 +276,40 @@ DataCollectionGrid.prototype.getColumns = function() {
                 data.xtal4 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(record.data.DataCollection_dataCollectionId, 4);
 
                 /** Image quality indicator **/
-                data.indicator = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(record.data.DataCollection_dataCollectionId);              
-                data.onlineresults = _this._getAutoprocessingStatistics(record.data);
+                data.indicator = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(record.data.DataCollection_dataCollectionId);                              
+
+                /** Gets the gif for snapshots if there is a workflow with snapshots **/
+                if (data.WorkflowStep_workflowStepType){
+                    if (data.WorkflowStep_workflowStepType.indexOf(&#039;Snapshots&#039;) != -1){
+                        if (data.WorkflowStep_workflowStepId){
+                            var listOfIds = data.WorkflowStep_workflowStepId.split(&#039;,&#039;);
+                            var listOfWorkflowStepType = data.WorkflowStep_workflowStepType.split(&#039;,&#039;);
+                            data.xtalAnimated = EXI.getDataAdapter().mx.workflowstep.getImageByWorkflowStepId(listOfIds[_.indexOf(listOfWorkflowStepType, &#039;Snapshots&#039;)]);
+                            _this.imageAnimatedURL[data.xtal1] = data.xtalAnimated;
+                            _this.imageAnimatedURL[data.xtalAnimated] = data.xtal1;
+                            data.hasAnimated = true;
+                        }
+                        
+                    }
+                }
                 
+                data.onlineresults = _this._getAutoprocessingStatistics(record.data);
+                /** Screening displayed if &#039;Characterization&#039; workflow or if indexing success */ 
+                if (data.Workflow_workflowType) {
+                    if (data.Workflow_workflowType == &#039;Characterisation&#039;) {
+                        data.screeningresults = [true];
+                    } else {
+                        data.screeningresults = [data.ScreeningOutput_indexingSuccess];
+                    }
+                    if (data.screeningresults[0]) {
+                        if (data.ScreeningOutput_indexingSuccess) {
+                            data.indexingresults = [true];
+                        } else {
+                            data.indexingresults = [false];
+                        }
+                    }
+                }
+               
                 /** We dont show screen if there are results of autoprocessing */
                 data.isScreeningVisible = true;
                 if (data.onlineresults){
@@ -292,7 +324,8 @@ DataCollectionGrid.prototype.getColumns = function() {
                 if (data.workflows == null) {
                     data.workflows = [];
                 }
-             
+                
+                
                 dust.render(_this.template, data, function(err, out) {                                                                       
                     html = html + out;
                 });

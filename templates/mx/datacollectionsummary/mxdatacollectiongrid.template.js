@@ -1,4 +1,6 @@
-<div class="container-fluid">
+{#.}
+
+<div class="container-fluid" >
    <div class="panel with-nav-tabs panel-default">
       <div class="panel-heading clearfix">
          <div class="pull-left">
@@ -8,7 +10,7 @@
                      </kbd> 
                       <span style='color:blue;'>
                      {@formatDate date=.DataCollectionGroup_startTime format="DD-MM-YYYY HH:mm:ss" /}
-                     </span>                                   
+                     </span>                                    
                 </span>
              <p><b>{.DataCollection_imageDirectory}</b></p>      
          </div> 
@@ -177,11 +179,8 @@
                            </div>
                            <div id='sample_puck_legend_{.DataCollection_dataCollectionId}' style="height:60px">
                            </div>                     
-                        </div>
-                        
-                       
+                        </div>                                               
                 </div>
-
                 <div class="container-fluid" >
                     <div class="puck-selected-panel">
                         <div id="puck_selected_info_{.DataCollection_dataCollectionId}" class="col-xs-12 col-md-12">
@@ -190,49 +189,7 @@
                </div>
                
             </div>
-         </div>
-         {!
-          <div id="df_{.DataCollection_dataCollectionId}" class="tab-pane fade">
-            <div class="container-fluid">
-               <div class="row">
-                <div class="col-xs-6 col-md-2">
-                     {>"sample.mxdatacollectiongrid.template"  /}                            
-                  </div>
-                  <div class="col-xs-6 col-md-2">
-                     {>"diffraction.mxdatacollectiongrid.template"  /}                            
-                  </div>
-                   <div class="col-xs-6 col-md-2">
- 
-                        <table class="table">
-                            <tr>
-                                <td>Radiation Sensitivity</td>
-                                <td class='column_parameter_value'>{.radiationSensitivity}</td>
-                            </tr>
-                            <tr>
-                                <td>Anomalous Scatterer</td>
-                                <td class='column_parameter_value'>{.anomalousScatterer}</td>
-                            </tr>
-                            <tr>
-                                <td>Preferred BeamSizeX</td>
-                                <td class='column_parameter_value'>{.preferredBeamSizeX}</td>
-                            </tr>
-                            <tr>
-                                <td>preferredBeamSizeY</td>
-                                <td class='column_parameter_value'>{.preferredBeamSizeY}</td>
-                            </tr>
-                        
-                            <tr>
-                                <td>Forced Space Group</td>
-                                <td class='column_parameter_value'>{.forcedSpaceGroup}</td>
-                            </tr>
-                        </table> 
-                    </div>
- 
-               </div>
-            </div>
-         </div>
-         !}
-         
+         </div>         
          <div id="dc_{.DataCollectionGroup_dataCollectionGroupId}" class="tab-pane fade">
             <div class="container-fluid">
                <div class="row">
@@ -286,11 +243,7 @@
                     </div>
                 </div>
             </div>  
-         {/gt} 
-
-         
-
-
+         {/gt}         
       </div>
       <div class="container-fluid" style="padding-bottom: 10px;">
             <div class="col-xs-12 col-md-12">
@@ -304,3 +257,5 @@
         </div>
    </div>
 </div>
+
+{/.}

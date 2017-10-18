@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">131.50</p>
+      <p class="stat">128.35</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">102</p>
+      <p class="stat">119</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">14.60</p>
+      <p class="stat">16.67</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.65</p>
+      <p class="stat">0.87</p>
     </div>
   </div>
 </div>
@@ -91,7 +91,9 @@
   <div class="row">
     <textarea id="file-source" class="col-md-12">function ExiController(){
 	this.init();
+  
 }
+
 
 ExiController.prototype.loadNavigationPanel = function(listView) {
 	/** Cleaning up navigation panel * */
@@ -116,6 +118,7 @@ ExiController.prototype.loadNavigationPanel = function(listView) {
 };
 
 ExiController.prototype.init = function(){
+    var _this = this;
 	function setPageBackground() {
 
 	}
@@ -124,17 +127,20 @@ ExiController.prototype.init = function(){
 	}
 
 	/** Welcome Page **/
-	Path.map(&quot;#/&quot;).to(function() {       
+	Path.map(&quot;#/&quot;).to(function() {   
+          
 		location.hash = &#039;/welcome&#039;;
 	}).enter(setPageBackground);
 	
 	Path.map(&quot;#/login&quot;).to(function() {
+       
         EXI.credentialManager.logout();
 		EXI.authenticationForm.show();
 	}).enter(setPageBackground);
 	
 	
 	Path.map(&quot;#/welcome&quot;).to(function() {
+       
 		//EXI.addMainPanel(new WelcomeMainView());
         //location.hash = &#039;/login&#039;;
          EXI.credentialManager.logout();
@@ -142,6 +148,7 @@ ExiController.prototype.init = function(){
 	}).enter(setPageBackground);
 	
 	Path.map(&quot;#/welcome/user/:user/main&quot;).to(function() {
+       
 		var user = this.params[&#039;user&#039;];		
         var mainView = new ManagerWelcomeMainView();
 		EXI.addMainPanel(mainView);
@@ -151,7 +158,7 @@ ExiController.prototype.init = function(){
 	
 
 	Path.map(&quot;#/welcome/manager/:user/main&quot;).to(function() {
-        
+       
 		var user = this.params[&#039;user&#039;];
 		var mainView = new ManagerWelcomeMainView();
 		EXI.addMainPanel(mainView);
@@ -160,18 +167,28 @@ ExiController.prototype.init = function(){
 		mainView.load(user);
 	}).enter(setPageBackground);
 	
-    Path.map(&quot;#/welcome/manager/:user/date/:start/:end/main&quot;).to(function() {                    
+    Path.map(&quot;#/welcome/manager/:user/date/:start/:end/main&quot;).to(function() {                         
 		var user = this.params[&#039;user&#039;];
 		var mainView = new ManagerWelcomeMainView();
 		EXI.addMainPanel(mainView);
         EXI.hideNavigationPanel();
 		mainView.loadSessionsByDate(user,this.params[&#039;start&#039;], this.params[&#039;end&#039;] );
 	}).enter(setPageBackground);
-    
-   
-    
-	
-	Path.map(&quot;#/logout&quot;).to(function() {
+
+	Path.map(&quot;#/welcome/manager/proposal/:proposal/main&quot;).to(function() {                         
+		var proposalCode = this.params[&#039;proposal&#039;];
+		var mainView = new ManagerWelcomeMainView();
+		EXI.addMainPanel(mainView);
+        EXI.hideNavigationPanel();
+		mainView.panel.setLoading(true);
+		var onSuccess = function (sender, sessions){
+			mainView.displaySessions(sessions, sessions.length + &quot; sessions for proposal &quot; + proposalCode);
+			mainView.panel.setLoading(false);
+		}
+		EXI.getDataAdapter({onSuccess:onSuccess}).proposal.session.getSessionsByProposal(proposalCode);
+	}).enter(setPageBackground);
+
+	Path.map(&quot;#/logout&quot;).to(function() {     
 		EXI.credentialManager.logout();
          EXI.hideNavigationPanel();
 		EXI.proposalManager.clear();

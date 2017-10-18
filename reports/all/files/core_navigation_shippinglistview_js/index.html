@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">137.47</p>
+      <p class="stat">130.06</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">26</p>
+      <p class="stat">63</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">10.38</p>
+      <p class="stat">18.33</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.18</p>
+      <p class="stat">0.53</p>
     </div>
   </div>
 </div>
@@ -92,6 +92,7 @@
     <textarea id="file-source" class="col-md-12">function ShippingListView(){
 	this.sorters = [{property : &#039;sessionId&#039;, direction: &#039;DESC&#039;}];
 	ListView.call(this);
+	this.dewars = null;
 }
 
 ShippingListView.prototype.getPanel = ListView.prototype.getPanel;
@@ -100,6 +101,39 @@ ShippingListView.prototype.getFilter = ListView.prototype.getFilter;
 ShippingListView.prototype.getFields = ListView.prototype.getFields;
 ShippingListView.prototype.getColumns = ListView.prototype.getColumns;
 
+ShippingListView.prototype.loadDewars = function (dewars) {
+	this.dewars = dewars;
+};
+
+/**
+* Return the number of containers and samples for a given shipment 
+*
+* @method getStatsByShippingId
+* @param {Integer} shippingId ShippingId
+*/
+ShippingListView.prototype.getStatsByShippingId = function(shippingId){
+	var _this = this;
+	if (this.dewars){
+		var _this = this;
+		var dewars = _.filter(this.dewars, function(e){return e.shippingId == shippingId;});
+		return this.getStatsFromDewars(dewars);
+	} else {
+		return null;
+	}
+};
+
+ShippingListView.prototype.getStatsFromDewars = function (dewars) {
+	var sampleCount = 0;
+	_(dewars).forEach(function(value) {
+		sampleCount = sampleCount + value.sampleCount;
+	});
+	return {
+				samples     : sampleCount,
+				dewars      : Object.keys(_.groupBy(dewars, &quot;dewarId&quot;)).length,
+				containers   : dewars.length
+		
+	};
+}
 
 /**
 * Calls to the dust template in order to render to puck in HTML
@@ -109,10 +143,13 @@ ShippingListView.prototype.getColumns = ListView.prototype.getColumns;
 */
 ShippingListView.prototype.getRow = function(record){
 	var html = &quot;&quot;;
-    
+
+	record.data.formattedCreationDate = moment(new Date(record.data.Shipping_creationDate)).format(&quot;DD-MM-YYYY&quot;);
+	record.data.stats = this.getStatsByShippingId(record.data.Shipping_shippingId);
+
 	dust.render(&quot;shipping.listview&quot;, record.data, function(err, out){
-        	html = out;
-     	});
+		html = out;
+	});
 	return html;
 };</textarea>
   </div>

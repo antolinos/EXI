@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">117.68</p>
+      <p class="stat">122.01</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">42</p>
+      <p class="stat">51</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">8.82</p>
+      <p class="stat">13.83</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.33</p>
+      <p class="stat">0.45</p>
     </div>
   </div>
 </div>
@@ -94,41 +94,50 @@
 	this.maxHeight = 300;
 }
 
-AutoProcIntegrationAttachmentGrid.prototype.load = function(data) {
+AutoProcIntegrationAttachmentGrid.prototype.load = function(data) {	
+	var _this = this;
     if (data){
-	       this.store.loadData(data, false);
+		data.sort(function(a, b) {
+			var textA = a.fileName.toUpperCase();
+			var textB = b.fileName.toUpperCase();
+			return (textA &lt; textB) ? -1 : (textA &gt; textB) ? 1 : 0;
+		});	
+
+		/** URL to attachment */
+		_.forEach(data, function(row){row.url = EXI.getDataAdapter().mx.autoproc.getAttachmentUrl(row.autoProcProgramAttachmentId);})
+
+		var html = &quot;&quot;;
+		dust.render(&quot;files.autoprocintegrationgrid.template&quot;, data, function(err, out) { 			
+			html = out;
+		});
+		
+		$(&quot;#&quot; + _this.id).html(html);
     }
 };
 
 AutoProcIntegrationAttachmentGrid.prototype.getPanel = function() {
 	var _this = this;
 	this.store = Ext.create(&#039;Ext.data.Store&#039;, {
-		fields : [  ]
+		fields : [&quot;fileName&quot;]
 	});
     	
-	this.panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
-		title : &#039;Auto-Processing Files&#039;,
+	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
+		id : this.id + &quot;panel&quot;,
+		title : &#039;Attachments&#039;,
 		store : this.store,
 		cls : &#039;border-grid&#039;,
 		margin : 5,
 		overflow :&#039;auto&#039;,
         height : 500,
-		columns : [ 		
-                    {
-                        text : &#039;fileName&#039;,
-                        dataIndex : &#039;fileName&#039;,
-                        flex : 1,
-                        renderer : function(grid, opt, val, val2, val3){
-                            var url = EXI.getDataAdapter().mx.autoproc.getDownloadAttachmentUrl(val.data.autoProcProgramAttachmentId);
-                            return &#039;&lt;a href=&quot;&#039;+ url + &#039;&quot;&gt;&#039;+ val.data.fileName + &#039;&lt;/a&gt;&#039;;				
-                        }
-                    }
+		items : [ 		
+					{
+						html : &#039;&lt;div style=&quot;height:500px;&quot; id=&quot;&#039;+ _this.id +&#039;&quot;&gt;&lt;/div&gt;&#039;
+
+					}                   
 		],
-		flex : 1,
-		viewConfig : {
-			stripeRows : true
-		}
+		flex : 1
 	});
+
 	return this.panel;
 };</textarea>
   </div>

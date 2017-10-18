@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">115.00</p>
+      <p class="stat">115.07</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">93</p>
+      <p class="stat">136</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">30.63</p>
+      <p class="stat">36.63</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.71</p>
+      <p class="stat">1.17</p>
     </div>
   </div>
 </div>
@@ -92,16 +92,20 @@
     <textarea id="file-source" class="col-md-12">function PuckWidgetContainer(args) {
 	var _this = this;
 	
+	this.onClick = new Event(this);
 	this.mouseOverCell = new Event(this);
 	this.mouseOutCell = new Event(this);
+	this.onMouseOver = new Event(this);
+	this.onMouseOut = new Event(this);
 	
 	this.xMargin = 0;
 	this.yMargin = 0;
+	this.containerId = 0;
+	this.enableMainClick = false;
+	this.enableMainMouseOver = false;
+	this.code = &quot;&quot;;
 	if (args){
 		if (args.puckType) {
-			if (args.puckType == &quot;UniPuck&quot; || args.puckType == &quot;SpinePuck&quot;) {
-				debugger
-			}
 			switch (args.puckType) {
 				case &quot;Unipuck&quot;:
 					this.puckWidget = new UniPuckWidget(args);
@@ -111,7 +115,17 @@
 					this.puckWidget = new SpinePuckWidget(args);
 					this.capacity = 10;
 					break;
+				case &quot;Puck&quot;:
+					this.puckWidget = new SpinePuckWidget(args);
+					this.capacity = 10;
+					break;
 			}
+		}
+		if (args.code){
+			this.code = args.code;
+		}
+		if (args.containerId){
+			this.containerId = args.containerId;
 		}
 		if (args.xMargin){
 			this.xMargin = args.xMargin;
@@ -119,8 +133,11 @@
 		if (args.yMargin){
 			this.yMargin = args.yMargin;
 		}
-		if (args.x) {
-			debugger
+		if (args.enableMainClick != null){
+			this.enableMainClick = args.enableMainClick;
+		}
+		if (args.enableMainMouseOver != null){
+			this.enableMainMouseOver = args.enableMainMouseOver;
 		}
 	}
 	
@@ -128,9 +145,8 @@
 		this.puckWidget = new SpinePuckWidget(args);
 	}
 	
-	this.puckWidget.onClick.attach(function(sender, cell){
-		
-		
+	this.puckWidget.onClick.attach(function(sender, id){
+		_this.onClick.notify(id);
 	});
 	
 	this.puckWidget.onMouseOver.attach(function(sender, location){
@@ -158,14 +174,27 @@ PuckWidgetContainer.prototype.getPanel = function () {
 			bodyStyle: &#039;background:transparent;&#039;,
 		    
             items : [
-						{
-							html : this.puckWidget.getPanel(),
-							width : 2*this.puckWidget.data.mainRadius + 1,
-							height : 2*this.puckWidget.data.mainRadius + 1
-						}
+						this.puckWidget.getPanel()
 			],
 			
 	});
+
+	this.panel.on(&#039;boxready&#039;, function() {
+        if(_this.enableMainClick) {
+			$(&quot;#&quot; + this.id).unbind(&#039;click&#039;).click(function(sender){
+				_this.onClick.notify(sender.target.id);
+			});
+		}
+		if(_this.enableMainMouseOver) {
+			$(&quot;#&quot; + this.id).unbind(&#039;mouseover&#039;).mouseover(function(sender){
+				_this.onMouseOver.notify(_this.puckWidget);
+			});
+			
+			$(&quot;#&quot; + this.id).unbind(&#039;mouseout&#039;).mouseout(function(sender){
+				_this.onMouseOut.notify(_this.puckWidget);
+			});
+		}
+    });
 	
 	return this.panel;
 	
@@ -176,11 +205,25 @@ PuckWidgetContainer.prototype.load = function (data) {
 }
 
 PuckWidgetContainer.prototype.loadSamples = function (samples) {
-	this.puckWidget.loadSamples(samples);
+	if (samples){
+		if (samples.length &gt; 0){
+			this.containerId = samples[0].Container_containerId; 
+			this.puckWidget.loadSamples(samples);
+		}
+	}
 }
 
 PuckWidgetContainer.prototype.focus = function (location, bool) {
 	this.puckWidget.focus(location, bool);
+}
+
+/**
+* It blinks the sample changer by fading IN and OUT
+*
+* @method blink` 
+*/
+PuckWidgetContainer.prototype.blink = function () {
+    this.puckWidget.blink();
 }</textarea>
   </div>
 </div>

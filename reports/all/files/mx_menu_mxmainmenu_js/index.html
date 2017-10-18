@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">114.08</p>
+      <p class="stat">116.67</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">180</p>
+      <p class="stat">143</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">20.41</p>
+      <p class="stat">19.17</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.16</p>
+      <p class="stat">1.17</p>
     </div>
   </div>
 </div>
@@ -104,6 +104,7 @@ MXMainMenu.prototype.setText = MainMenu.prototype.setText;
 MXMainMenu.prototype.getHomeItem = MainMenu.prototype.getHomeItem;
 MXMainMenu.prototype.getHelpMenu = MainMenu.prototype.getHelpMenu;
 MXMainMenu.prototype.getShipmentItem = MainMenu.prototype.getShipmentItem;
+MXMainMenu.prototype.getDataExplorerMenu = MainMenu.prototype.getDataExplorerMenu;
 
 MXMainMenu.prototype.getMenuItems = function() {
 	return [
@@ -134,12 +135,23 @@ MXMainMenu.prototype.getMenuItems = function() {
             disabled : true,
 			menu : this.getOnlineDataAnalisysMenu() 
 		}, 
+		
 		{
-			text : this._convertToHTMLWhiteSpan(&quot;Help&quot;),
-			cls : &#039;ExiSAXSMenuToolBar&#039;,
-             disabled : true,
-			menu : this.getHelpMenu() 
-		}, 
+			text : this._convertToHTMLWhiteSpan(&quot;&lt;button type=&#039;button&#039; class=&#039;btn btn-default&#039;&gt; &lt;span class=&#039;glyphicon glyphicon-refresh&#039;&gt;&lt;/span&gt; ISPyB&lt;/button&gt;&quot;),
+			cls : &#039;ExiSAXSMenuToolBar&#039;,			
+			handler : function(){
+				EXI.setLoadingMainPanel(&quot;Synch is running&quot;);
+				var onSuccess = function(sender, data){					
+					EXI.setLoadingMainPanel(false);
+				}
+				var onError = function(sender,data){										
+					EXI.setLoadingMainPanel(false);
+				}
+				
+				EXI.getDataAdapter({onSuccess : onSuccess, onError : onError}).proposal.proposal.synchSMIS();
+				
+			}
+		},
 		&#039;-&gt;&#039;,
 		{
 			xtype : &#039;textfield&#039;,
@@ -172,36 +184,7 @@ MXMainMenu.prototype.getOnlineDataAnalisysMenu = function() {
 
 	return Ext.create(&#039;Ext.menu.Menu&#039;, {
 		items : [
-//		{
-//		    text: &#039;Radio Options&#039;,
-//		    menu: {        // &lt;-- submenu by nested config object
-//		        items: [
-//		            // stick any markup in a menu
-//		            &#039;&lt;b class=&quot;menu-title&quot;&gt;Choose a Theme&lt;/b&gt;&#039;,
-//		            {
-//		                text: &#039;Aero Glass&#039;,
-//		                checked: true,
-//		                group: &#039;theme&#039;,
-//		                checkHandler: onItemCheck
-//		            }, {
-//		                text: &#039;Vista Black&#039;,
-//		                checked: false,
-//		                group: &#039;theme&#039;,
-//		                checkHandler: onItemCheck
-//		            }, {
-//		                text: &#039;Gray Theme&#039;,
-//		                checked: false,
-//		                group: &#039;theme&#039;,
-//		                checkHandler: onItemCheck
-//		            }, {
-//		                text: &#039;Default Theme&#039;,
-//		                checked: false,
-//		                group: &#039;theme&#039;,
-//		                checkHandler: onItemCheck
-//		            }
-//		        ]
-//		    }
-//		},
+
 		{
 			text : &#039;Dimple&#039;,
 			checked : false,
@@ -244,26 +227,6 @@ MXMainMenu.prototype.getProteinCrystalsMenu = function() {
 			{
 				text : &#039;Puck&#039;,
 				icon : &#039;../images/icon/testtube.png&#039;,
-				handler : onItemCheck 
-			}
-		] 
-	});
-};
-
-MXMainMenu.prototype.getDataExplorerMenu = function() {
-	function onItemCheck(item, checked) {
-		if (item.text == &quot;Calendar&quot;) {
-			location.hash = &quot;/session/nav&quot;;
-		}
-		if (item.text == &quot;Experiments&quot;) {
-			location.hash = &quot;/experiment/nav&quot;;
-		}
-	}
-	return Ext.create(&#039;Ext.menu.Menu&#039;, {
-		items : [ 
-			{
-				text : &#039;Calendar&#039;,
-				icon : &#039;../images/icon/sessions.png&#039;,
 				handler : onItemCheck 
 			}
 		] 

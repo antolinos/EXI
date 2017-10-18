@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - core/view/shipping/puckformview.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>core/view/shipping/puckformview.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">107.57</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">454</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">52.88</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">5.10</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+* This class containes name, description, samples spreadsheet and puck loyout for a given puck 
+*
+* @class PuckForm
+* @constructor
+**/
+function PuckFormView(args) {
+	this.id = BUI.id();
+
+	/**  puckformview.template contains two information panels which id are the stored in the next variables. This is done because we want to use notify based in the ID **/
+	this.specialCharacterInfoPanelId = this.id + &quot;_specialCharacterInfoPanelId&quot;;
+    this.uniquenessInfoPanelId = this.id + &quot;_uniquenessInfoPanelId&quot;;
+
+	this.height = 500;
+	this.width = 500;
+	this.unsavedChanges = false;
+	
+	/** When getPanel it will load all the samples for this proposal */
+	this.proposalSamples = [];
+
+	if (args != null) {
+		if (args.height != null) {
+			this.height = args.height;
+		}
+		if (args.width != null) {
+			this.width = args.width;
+		}
+	}
+
+	
+	var _this = this;
+	
+	this.containerSpreadSheet = new ContainerSpreadSheet({width : Ext.getBody().getWidth() - 100, height : 600});
+	this.containerSpreadSheet.onModified.attach(function (sender, change) {
+		_this.unsavedChanges = true;
+	});
+
+	this.capacityCombo = new ContainerTypeComboBox({label : &quot;Type:&quot;, labelWidth : 100, width : 250, initDisabled : true});
+	this.capacityCombo.onSelected.attach(function (sender, data) {
+		var capacity = data.capacity;
+		_this.unsavedChanges = true;
+		_this.containerTypeChanged(capacity);
+	});
+	
+	this.onRemoved = new Event(this);
+	this.onSaved = new Event(this);
+}
+
+/** Loads a puck into the form **/
+PuckFormView.prototype.load = function(containerId, shippingId, shippingStatus) {
+	var _this = this;
+    this.shippingId = shippingId;
+    this.shippingStatus = shippingStatus;
+    this.containerId = containerId;
+    // this.containerSpreadSheet.setLoading(true);
+	this.panel.setTitle(&quot;Shipment&quot;);
+	this.panel.tab.on(&#039;click&#039;,function() {
+		_this.returnToShipment();
+	});
+    var onSuccess = function(sender, puck){
+        _this.puck = puck;
+        if (puck != null){
+            Ext.getCmp(_this.id + &quot;puck_name&quot;).setValue(_this.puck.code);
+			if (_this.puck.capacity){
+            	_this.capacityCombo.setValue(_this.puck.capacity);
+			} else {
+				$.notify(&quot;ERROR: The capacity of the container is not defined.&quot;, &quot;error&quot;);
+			}
+            Ext.getCmp(_this.id + &quot;puck_beamline&quot;).setValue(_this.puck.beamlineLocation);
+            Ext.getCmp(_this.id + &quot;puck_sampleChangerLocation&quot;).setValue(_this.puck.sampleChangerLocation);
+            Ext.getCmp(_this.id + &quot;puck_status&quot;).setValue(_this.puck.containerStatus);                
+        }
+		_this.fillSamplesGrid(puck);
+    };
+    EXI.getDataAdapter({onSuccess : onSuccess}).proposal.shipping.getContainerById(this.containerId,this.containerId,this.containerId);
+
+};
+
+PuckFormView.prototype.fillSamplesGrid = function (puck) {
+	var _this = this;
+	this.containerSpreadSheet.setLoading(true);
+	var onSuccess = function (sender, samples) {
+		if (samples) {
+			if (samples.length &gt; 0) {
+				_this.containerSpreadSheet.setRenderCrystalFormColumn(true);
+			} else {
+				_this.containerSpreadSheet.setRenderCrystalFormColumn(false);
+			}
+			_this.containerSpreadSheet.setContainerType(puck.containerType);
+			_this.containerSpreadSheet.load(puck);
+			if (_this.shippingStatus != &quot;processing&quot;){
+				var withoutCollection = _.filter(samples,{DataCollectionGroup_dataCollectionGroupId : null});
+				if (withoutCollection.length == samples.length) {
+					Ext.getCmp(_this.id + &quot;_save_button&quot;).enable();
+					Ext.getCmp(_this.id + &quot;_remove_button&quot;).enable();
+					_this.capacityCombo.enable();
+				}
+			} else {
+				_this.containerSpreadSheet.disableAll();
+			}
+			_this.containerSpreadSheet.setLoading(false);
+			if (_this.containerSpreadSheet.renderCrystalFormColumn) {
+				_this.setValuesForEditCrystalColumn();
+			}
+		}
+	}
+
+	EXI.getDataAdapter({onSuccess : onSuccess}).mx.sample.getSamplesByContainerId(puck.containerId);
+}
+
+PuckFormView.prototype.getPanel = function() {
+	var _this =this;
+
+    /** Retrieve samples for the proposal in order to check that the protein + sample name are unique */
+	var onSuccess = function(sender, data){		
+		console.log(data);
+		
+		_this.proposalSamples = data;
+		$.notify(&quot;Retrieved &quot; + data.length + &quot; samples for selected proposal&quot; , &quot;info&quot;);
+
+	};
+	var onError = function(sender, data){
+		console.log(&quot;Error was produced when getSampleInfoByProposalId&quot;);
+	};
+
+	EXI.getDataAdapter({onSuccess: onSuccess, onError:onError}).mx.sample.getSampleInfoByProposalId();
+
+
+    var html = &quot;&quot;;
+	dust.render(&quot;puckformview.template&quot;, 
+					{
+								specialCharacterInfoPanelId: this.specialCharacterInfoPanelId,
+								uniquenessInfoPanelId:this.uniquenessInfoPanelId
+					}, 
+					function(err, out) {
+                    	html = out;
+    				}
+	);
+	
+	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
+		autoScroll 	: true,
+		buttons : this.getToolBar(),
+		items : [ 
+		         {
+							xtype : &#039;container&#039;,
+							margin : &#039;5 0 2 5&#039;,
+							layout : &#039;hbox&#039;,
+							items : [																												        
+										{
+												xtype: &#039;requiredtextfield&#039;,
+												id : this.id + &#039;puck_name&#039;,
+												fieldLabel : &#039;Name&#039;,
+												name : &#039;name&#039;,
+												width : 250,
+												margin : &#039;5 5 5 5&#039;,
+												labelWidth : 50,
+										},
+										this.capacityCombo.getPanel(),
+										{
+												xtype: &#039;textfield&#039;,
+												id : this.id + &#039;puck_beamline&#039;,
+												fieldLabel : &#039;Beamline&#039;,
+												width : 250,
+												disabled : true,
+												margin : &#039;5 5 5 10&#039;,
+												labelWidth : 75
+										},
+										{
+												xtype: &#039;textfield&#039;,
+												id : this.id + &#039;puck_sampleChangerLocation&#039;,
+												fieldLabel : &#039;#Sample Changer&#039;,
+												width : 300,
+												disabled : true,
+												margin : &#039;5 5 5 5&#039;,
+												labelWidth :150
+										},                                                       
+										{
+												xtype: &#039;textfield&#039;,
+												id : this.id + &#039;puck_status&#039;,
+												fieldLabel : &#039;Status&#039;,
+												width : 250,
+												disabled : true,
+												margin : &#039;5 5 5 5&#039;,
+												labelWidth : 50
+										}
+									]
+						
+		         },
+				 {
+					 html : html
+				 }
+				 ,
+		         this.containerSpreadSheet.getPanel(),
+                
+	         ] 
+		} 
+	);
+	return this.panel;
+};
+
+PuckFormView.prototype.getToolBar = function() {
+	var _this = this;
+	return [
+			{
+			    text: &#039;Remove&#039;,
+				id: this.id + &quot;_remove_button&quot;,
+			    width : 100,
+			    height : 30,
+				disabled : true,
+			    cls : &#039;btn-red&#039;,
+			    handler : function(){
+			    	function showResult(result){
+						if (result == &quot;yes&quot;){
+							_this.removePuck();							
+						}
+			    	}
+					  Ext.MessageBox.show({
+				           title:&#039;Remove&#039;,
+				           msg: &#039;Removing a puck from this parcel will remove also its content. &lt;br /&gt;Are you sure you want to continue?&#039;,
+				           buttons: Ext.MessageBox.YESNO,
+				           fn: showResult,
+				           animateTarget: &#039;mb4&#039;,
+				           icon: Ext.MessageBox.QUESTION
+				       });
+			    }
+			},
+	        &quot;-&gt;&quot;,
+	        {
+	            text: &#039;Save&#039;,
+                id: this.id + &quot;_save_button&quot;,
+	            width : 100,
+	            height : 30,
+				disabled : true,
+	            handler : function(){
+	            	_this.save();
+	            }
+	        },
+			{
+	            text: &#039;Return to shipment&#039;,
+	            width : 200,
+	            height : 30,
+	            handler : function () {
+                    _this.returnToShipment();
+                }
+	        }
+	];
+};
+
+PuckFormView.prototype.removePuck = function() {
+	var _this = this;
+	this.panel.setLoading();
+	var onSuccess = function(sender, data){
+		_this.panel.setLoading(false);
+        location.href = &quot;#/shipping/&quot; + _this.shippingId + &quot;/main&quot;;      
+	};
+	EXI.getDataAdapter({onSuccess: onSuccess}).proposal.shipping.removeContainerById(this.containerId,this.containerId,this.containerId );
+	
+};
+
+PuckFormView.prototype.returnToShipment = function(){
+    /**Check if the container&#039;s name has been changed */
+	if (this.puck.code != Ext.getCmp(this.id + &#039;puck_name&#039;).getValue()) {
+		this.unsavedChanges = true;
+	}
+	if (this.unsavedChanges) {
+		this.showReturnWarning();
+	} else {
+		location.href = &quot;#/shipping/&quot; + this.shippingId + &quot;/main&quot;;
+	}
+}
+
+PuckFormView.prototype.displaySpecialCharacterWarning = function(message) {	
+	$(&quot;#&quot; + this.specialCharacterInfoPanelId).notify(message, { position:&quot;right&quot; });
+	$(&quot;#&quot; + this.specialCharacterInfoPanelId).fadeIn().fadeOut().fadeIn().fadeOut().fadeIn().fadeOut().fadeIn();
+};
+
+PuckFormView.prototype.displayUniquenessWarning = function(message) {	
+	$(&quot;#&quot; + this.uniquenessInfoPanelId).notify(message, { position:&quot;right&quot; });
+	$(&quot;#&quot; + this.uniquenessInfoPanelId).fadeIn().fadeOut().fadeIn().fadeOut().fadeIn().fadeOut().fadeIn();
+};
+
+/**
+* Check the uniqueness of proteinId + sampleName with the already created samples or within the shipment
+* If containerId is the same then protein + sampleName + containerId should match
+*
+* @method checkSampleNames
+* @param {Array} sampleNames Array with the sample names from table
+* @param {Array} proteinIds Array with the proteinIds from table
+*/
+PuckFormView.prototype.checkSampleNames = function(sampleNames, proteinIds, containerId) {	
+	 var conflicts = [];
+
+	 /** Add a conflict if two samples have got the same name and the same proteinId within the shipment */
+	 var samples = [];
+	 for(var i=0; i &lt; sampleNames.length; i++){		
+		 samples.push({name : sampleNames[i], proteinId: proteinIds[i]});
+	 }
+
+	 for(var i=0; i &lt; sampleNames.length; i++){		
+		var sameSampleName = (_.filter(samples, { &#039;name&#039;: samples[i].name, &#039;proteinId&#039;: samples[i].proteinId }));
+		if (sameSampleName.length &gt; 1){			
+			conflicts = conflicts.concat(sameSampleName[0].name);
+			break;
+		}
+	 }
+	 
+	 for(var i=0; i &lt; sampleNames.length; i++){		
+		 var conflict = _.find(this.proposalSamples, {BLSample_name:  sampleNames[i], Protein_proteinId:  proteinIds[i] });
+		 if (conflict){
+			 /** Are the same samples, same container Id? */
+			 if (conflict.Container_containerId != containerId){			 
+			 	conflicts.push(sampleNames[i]);
+			 }
+		 }
+	 }
+	
+	 return conflicts;
+	
+};
+
+/**
+* Saves the container
+*
+* @method save
+* @param {Boolean} returnToShipment True if you want to return to shipment after the save
+*/
+PuckFormView.prototype.save = function(returnToShipment) {	
+	var _this = this;
+
+	var puck = this.containerSpreadSheet.getPuck();
+
+	
+	/** Check if all samples have got a name */
+	if (puck.sampleVOs &amp;&amp; puck.sampleVOs.length &gt; 0) {
+		var sampleNames = _.map(puck.sampleVOs,&quot;name&quot;);
+		for (var i in sampleNames){
+			if ((sampleNames[i] == undefined) ||  (sampleNames[i] == &#039;&#039;)){
+				_this.displaySpecialCharacterWarning(&quot;There are samples without a Sample Name&quot;);
+				return;
+			}
+		}
+		
+	}
+
+
+	/** Check if protein + sample name is unique for the proposal or within the shipment*/
+	if (puck.sampleVOs &amp;&amp; puck.sampleVOs.length &gt; 0) {
+		var sampleNames = _.map(puck.sampleVOs,&quot;name&quot;);
+		var proteinIds = _.map(puck.sampleVOs,&quot;crystalVO.proteinVO.proteinId&quot;);
+		
+		var conflicts = _this.checkSampleNames(sampleNames, proteinIds, puck.containerId);
+		if (conflicts.length &gt; 0){
+			_this.displayUniquenessWarning(&quot;Sample names are not unique for the proposal. Please change: &quot; + conflicts);
+			return;
+		}
+	}
+
+
+	/** Updating general parameters **/
+	puck.code = Ext.getCmp(_this.id + &#039;puck_name&#039;).getValue();
+	puck.capacity = _this.capacityCombo.getSelectedCapacity();
+	puck.containerType = _this.capacityCombo.getSelectedType();
+
+	// Check if sample names have special characters
+	var hasSpecialCharacter = false;
+	var specialCharacter = [];
+	var specialCharacterRow = [];
+	var format = /[ ~`!@#$%^&amp;*()+\=\[\]{};&#039;:&quot;\\|,.&lt;&gt;\/?]/;
+	for (var i = 0 ; i &lt; puck.sampleVOs.length ; i++) {
+		if(format.test(puck.sampleVOs[i].name)) {
+			hasSpecialCharacter = true
+			specialCharacter.push(puck.sampleVOs[i].name);
+			specialCharacterRow.push(i + 1);
+			
+		}
+	}
+
+	if (!hasSpecialCharacter) {
+		var onError = function(sender, error){
+			_this.panel.setLoading(false);
+			EXI.setError(error.responseText);
+		};
+		
+		var onSuccess = function(sender, puck){
+			_this.unsavedChanges = false;
+			_this.panel.setLoading(false);
+			if (returnToShipment){
+				location.href = &quot;#/shipping/&quot; + _this.shippingId + &quot;/main&quot;;
+			} else {
+				_this.load(_this.containerId, _this.shippingId);
+			}
+		};
+		this.panel.setLoading(&quot;Saving Puck&quot;);
+		
+		EXI.getDataAdapter({onSuccess : onSuccess, onError : onError}).proposal.shipping.saveContainer(this.containerId, this.containerId, this.containerId, puck);
+	} else {
+		_this.displaySpecialCharacterWarning(specialCharacter +  &quot; contains special characters. Rows:  #&quot; + specialCharacterRow);				
+		
+	}
+};
+
+/**
+ * When container type has changed from SPINE|| UNIPUCK || PLATE
+ * 
+ * We make the spreadsheet longer and the platelayout is rendered again
+ */
+PuckFormView.prototype.containerTypeChanged = function(capacity) {
+	var currentType = this.capacityCombo.getTypeByCapacity(this.puck.capacity);
+	var newType = this.capacityCombo.getTypeByCapacity(capacity);
+	this.puck.capacity = capacity;
+	this.containerSpreadSheet.setContainerType(newType);
+	this.containerSpreadSheet.updateNumberOfRows(capacity);
+};
+
+/**
+ * When container type has changed from SPINE|| UNIPUCK || PLATE
+ * Updates the values for the edit crystal column
+ */
+PuckFormView.prototype.setValuesForEditCrystalColumn = function(capacity) {
+	var rows = this.containerSpreadSheet.parseTableData();
+	var columnIndex = this.containerSpreadSheet.getColumnIndex(&quot;editCrystalForm&quot;);
+	for (var i = 0; i &lt; rows.length; i++) {
+		this.containerSpreadSheet.addEditCrystalFormButton(rows[i].location-1,columnIndex);
+	}
+	this.panel.doLayout();
+};
+
+PuckFormView.prototype.showReturnWarning = function() {
+	var _this = this;
+	var window = Ext.create(&#039;Ext.window.Window&#039;, {
+		title: &#039;Container&#039;,
+		width: 250,
+		layout: &#039;fit&#039;,
+		modal : true,
+		items: [
+					{
+						html : &#039;&lt;div class=&quot;container-fluid&quot; style=&quot;margin:10px;&quot;&gt;&lt;div class=&quot;row&quot;&gt;&lt;span style=&quot;font-size:14px;color: #666;&quot;&gt;Do you want to save the changes to the container &#039; + _this.puck.code + &#039;?&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&#039;,
+					}
+		],
+		buttons : [ {
+						text : &#039;Yes&#039;,
+						handler : function() {
+							window.close();
+							_this.save(true);
+						}
+					},{
+						text : &#039;No&#039;,
+						handler : function() {
+							window.close();
+							location.href = &quot;#/shipping/&quot; + _this.shippingId + &quot;/main&quot;;
+						}
+					}, {
+						text : &#039;Cancel&#039;,
+						handler : function() {
+							window.close();
+						}
+					} ]
+	});
+	window.show();
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

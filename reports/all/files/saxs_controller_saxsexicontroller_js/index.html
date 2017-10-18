@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">125.31</p>
+      <p class="stat">124.25</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">406</p>
+      <p class="stat">423</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">58.73</p>
+      <p class="stat">54.09</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">4.36</p>
+      <p class="stat">4.72</p>
     </div>
   </div>
 </div>
@@ -89,19 +89,27 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">function SAXSExiController() {
-    
-	this.init();
+    <textarea id="file-source" class="col-md-12">function SAXSExiController() {    
+    this.init();
+    this.timers = [];
+    this.timeout = 60000;
 }
 
 SAXSExiController.prototype.loadNavigationPanel = ExiController.prototype.loadNavigationPanel;
 
+SAXSExiController.prototype.cleanTimers = function(){
+    for (var i = 0; i &lt; this.timers.length; i++) {
+        clearTimeout(this.timers[i]);         
+    }
+    
+};
 SAXSExiController.prototype.routeNavigation = function() {
 	var _this = this;
 	function loadNavigationPanel(listView) {
 		return _this.loadNavigationPanel(listView);
 	}
 
+   
 	/**
 	 * Loading navigation panel
 	 * 
@@ -182,7 +190,7 @@ SAXSExiController.prototype.routeNavigation = function() {
 };
 
 SAXSExiController.prototype.setPageBackground = function() {
-
+   
 };
 
 SAXSExiController.prototype.notFound = function() {
@@ -190,19 +198,43 @@ SAXSExiController.prototype.notFound = function() {
 };
 
 SAXSExiController.prototype.routeExperiment = function() {
+    
+    var _this = this;
+    
 	Path.map(&quot;#/experiment/experimentId/:experimentId/main&quot;).to(function() {
-		var mainView = new ExperimentMainView();
-		EXI.addMainPanel(mainView);
-		mainView.load(this.params[&#039;experimentId&#039;]);
-		/** Selecting data collections from experiment * */
-		mainView.onSelect.attach(function(sender, element) {
-			EXI.localExtorage.selectedSubtractionsManager.append(element);
-		});
-		mainView.onDeselect.attach(function(sender, element) {
-			EXI.localExtorage.selectedSubtractionsManager.remove(element);
-		});
+        var _thisRoute = this;
+        var mainView = new ExperimentMainView();
+        EXI.addMainPanelWithTimer(mainView);	                    
+        function loadMainExperimentView(experimentId){
+        	mainView.panel.setLoading();	
+            var onSuccess = function(sender, dataCollections){			
+                mainView.load(dataCollections);
+                mainView.panel.setLoading(false);				
+            };
+            EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByExperiment(_thisRoute.params[&#039;experimentId&#039;]);
+          
+            $.notify(&quot;Experiment results will be refreshed in 60 seconds&quot;, &quot;info&quot;);                                    
+        }
+        loadMainExperimentView();
+        
+        
+       EXI.addTimer(setInterval(loadMainExperimentView, _this.timeout));
+		
 
 	}).enter(this.setPageBackground);
+    
+    Path.map(&quot;#/experiment/session/:sessionId/main&quot;).to(function() {
+		var mainView = new ExperimentMainView();
+		EXI.addMainPanel(mainView);	
+		mainView.panel.setLoading();		
+		var onSuccess = function(sender, dataCollections){			
+			mainView.load(dataCollections);
+			mainView.panel.setLoading(false);				
+		};
+		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsBySessionId(this.params[&#039;sessionId&#039;]);
+
+	}).enter(this.setPageBackground);
+    
 	
 	Path.map(&quot;#/experiment/hplc/:experimentId/main&quot;).to(function() {
 		var mainView = new HPLCMainView();
@@ -269,40 +301,24 @@ SAXSExiController.prototype.routeExperiment = function() {
 SAXSExiController.prototype.routeDataCollection = function() {
 	Path.map(&quot;#/datacollection/macromoleculeAcronym/:value/main&quot;).to(function() {
 		/** Loading navidation menu **/
-		EXI.setLoadingMainPanel(&quot;Searching &quot; + this.params[&#039;value&#039;]+  &quot;...&quot;);
-		var onSuccess = function(sender, dataCollections) {
-			if (dataCollections != null){
-				if (dataCollections.length &gt; 0){
-					var mainView = new DataCollectionMainView();
-					EXI.addMainPanel(mainView);
-					mainView.load(dataCollections);
-					/** Selecting data collections from experiment * */
-					mainView.onSelect.attach(function(sender, element) {
-						EXI.localExtorage.selectedSubtractionsManager.append(element);
-					});
-					mainView.onDeselect.attach(function(sender, element) {
-						EXI.localExtorage.selectedSubtractionsManager.remove(element);
-					});
-					
-					var listView = new DataCollectionListView();
-					listView.onSelect.attach(function(sender, selected) {
-						mainView.filter( selected[0].macromoleculeId, selected[0].bufferAcronym);
-					});
-					EXI.addNavigationPanel(listView);
-					listView.load(dataCollections);
-					EXI.setLoadingNavigationPanel(false);
-				}
-				else{
-					BUI.showWarning(&quot;No macromolecule has been found&quot;);
-				}
-			}
-			else{
-				BUI.showWarning(&quot;No data to display&quot;);
-			}
-//			EXI.setLoadingNavigationPanel(false);
-			EXI.setLoadingMainPanel(false);
-		};
-		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByKey(this.params[&#039;key&#039;], this.params[&#039;value&#039;]);
+		    EXI.setLoadingMainPanel(&quot;Searching &quot; + this.params[&#039;value&#039;]+  &quot;...&quot;);
+
+			var mainView = new ExperimentMainView();
+            EXI.addMainPanel(mainView);	
+           		
+            var onSuccess = function(sender, dataCollections){			                
+                mainView.load(dataCollections);
+               
+                EXI.setLoadingMainPanel(false);				
+            };            
+            if (EXI.proposalManager.getMacromoleculeByAcronym(this.params[&#039;value&#039;]) != null){
+                EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByMacromoleculeId(EXI.proposalManager.getMacromoleculeByAcronym(this.params[&#039;value&#039;]).macromoleculeId);
+            }
+            else{
+                BUI.showError(&quot;No Macromolecule Found&quot;);
+                 EXI.setLoadingMainPanel(false);	
+            }
+
 
 	}).enter(this.setPageBackground);
 	
@@ -325,14 +341,18 @@ SAXSExiController.prototype.routeDataCollection = function() {
 		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByKey(this.params[&#039;key&#039;], this.params[&#039;value&#039;]);
 	}).enter(this.setPageBackground);
 
-	Path.map(&quot;#/saxs/datacollection/:key/:value/primaryviewer&quot;).to(function() {
-		var onSuccess = function(sender, data) {
-			var primaryMainView = new PrimaryDataMainView();
-			EXI.addMainPanel(primaryMainView);
-			primaryMainView.load(data);
-
-		};
-		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByKey(this.params[&#039;key&#039;], this.params[&#039;value&#039;]);
+	Path.map(&quot;#/saxs/datacollection/dataCollectionId/:dataCollectionId/primaryviewer&quot;).to(function() {		
+			var primaryMainView = new PrimaryDataMainView();    
+            EXI.addMainPanel(primaryMainView);        		            
+			primaryMainView.load(this.params[&#039;dataCollectionId&#039;]);		
+		
+	}).enter(this.setPageBackground);
+    
+    Path.map(&quot;#/saxs/datacollection/dataCollectionId/:dataCollectionId/abinitio&quot;).to(function() {		
+			var primaryMainView = new AbinitioMainView();    
+            EXI.addMainPanel(primaryMainView);        		            
+			primaryMainView.load(this.params[&#039;dataCollectionId&#039;]);		
+		
 	}).enter(this.setPageBackground);
 	
 	Path.map(&quot;#/saxs/datacollection/:key/:value/merge&quot;).to(function() {
@@ -345,8 +365,6 @@ SAXSExiController.prototype.routeDataCollection = function() {
 		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByKey(this.params[&#039;key&#039;], this.params[&#039;value&#039;]);
 	}).enter(this.setPageBackground);
 };
-
-
 
 SAXSExiController.prototype.routePrepare = function() {
 	Path.map(&quot;#/buffer/:bufferId/main&quot;).to(function() {
@@ -389,14 +407,7 @@ SAXSExiController.prototype.routePrepare = function() {
 		EXI.addMainPanel(mainView);
 		mainView.load();
 	}).enter(this.setPageBackground);
-	
-	
 
-//	Path.map(&quot;#/prepare/macromolecule/main&quot;).to(function() {
-//		var mainView = new MacromoleculeMainView();
-//		EXI.addMainPanel(mainView);
-//		mainView.load();
-//	}).enter(this.setPageBackground);
 
 	Path.map(&quot;#/prepare/templates/main&quot;).to(function() {
 		var mainView = new ExperimentDesignerMainView();
@@ -439,33 +450,39 @@ SAXSExiController.prototype.init = function() {
 	
 
     /** Loading a single session on the navigation panel * */
-	Path.map(&quot;#/session/nav/:sessionId/session&quot;).to(function() {
-       
+	Path.map(&quot;#/session/nav/:sessionId/session&quot;).to(function() {           
         EXI.clearNavigationPanel();
+        EXI.setLoadingMainPanel(true);    
 		var listView = new SessionSaxsListView();		
 		/** When selected move to hash * */
 		listView.onSelect.attach(function(sender, selected) {
-			if (selected[0].experimentType == &quot;HPLC&quot;){
-				location.hash = &quot;/experiment/hplc/&quot; + selected[0].experimentId + &quot;/main&quot;;
-			}
-			if ((selected[0].experimentType == &quot;STATIC&quot;)||(selected[0].experimentType == &quot;CALIBRATION&quot;)){
-				location.hash = &quot;/experiment/experimentId/&quot; + selected[0].experimentId + &quot;/main&quot;;
-			}
-			if (selected[0].experimentType == &quot;TEMPLATE&quot;){
-				location.hash = &quot;/experiment/templateId/&quot; + selected[0].experimentId + &quot;/main&quot;;
-			}
+            if (selected[0]){
+                if (selected[0].experimentType == &quot;HPLC&quot;){
+                    location.hash = &quot;/experiment/hplc/&quot; + selected[0].experimentId + &quot;/main&quot;;
+                }
+                if ((selected[0].experimentType == &quot;STATIC&quot;)||(selected[0].experimentType == &quot;CALIBRATION&quot;)){
+                    location.hash = &quot;/experiment/experimentId/&quot; + selected[0].experimentId + &quot;/main&quot;;
+                }
+                if (selected[0].experimentType == &quot;TEMPLATE&quot;){
+                    location.hash = &quot;/experiment/templateId/&quot; + selected[0].experimentId + &quot;/main&quot;;
+                }
+            }
 		});
-         var onSuccess = function(sender, data){            
-		    EXI.addNavigationPanel(listView);
-            listView.load(data);            
-            EXI.setLoadingMainPanel(false);    
-          };
-            
-         EXI.getDataAdapter({
-                onSuccess : onSuccess                
-            }).saxs.experiment.getExperimentsBySessionId(this.params[&#039;sessionId&#039;]); 
-            
-
+        
+		EXI.addNavigationPanelWithTimer(listView);
+        var _thisRoute = this;
+        function loadNavigationSession(){
+            var onSuccess = function(sender, data){            
+                listView.load(data);            
+                EXI.setLoadingMainPanel(false);    
+            };            
+            EXI.getDataAdapter({onSuccess : onSuccess}).saxs.experiment.getExperimentsBySessionId(_thisRoute.params[&#039;sessionId&#039;]);
+            $.notify(&quot;Session results will be refreshed in 60 seconds&quot;, &quot;info&quot;);                              
+        } 
+        
+        loadNavigationSession();  
+        
+        EXI.addTimer(setInterval(loadNavigationSession,_this.timeout));
 	}).enter(this.setPageBackground);
     
     
@@ -488,7 +505,7 @@ SAXSExiController.prototype.init = function() {
 		};
 		
 		EXI.getDataAdapter({onSuccess : onSuccess, onError :onError}).exi.offline.getRuns(projectId);
-//		exidataAdapter.getRuns(projectId);
+
 	}).enter(this.setPageBackground);
 	
 

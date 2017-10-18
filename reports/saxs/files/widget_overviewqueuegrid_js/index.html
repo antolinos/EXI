@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - widget/overviewqueuegrid.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>widget/overviewqueuegrid.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">115.24</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">92</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">21.54</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.83</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">function OverviewQueueGrid(args) {
+	QueueGrid.call(this,args);
+
+	this.height = 0;
+	if (args) {
+		if (args.height) {
+			this.height = args.height;
+		}
+	}
+}
+
+OverviewQueueGrid.prototype.getPercentage = QueueGrid.prototype.getPercentage;
+OverviewQueueGrid.prototype.getImage = QueueGrid.prototype.getImage;
+OverviewQueueGrid.prototype.parseDataById = QueueGrid.prototype.parseDataById;
+OverviewQueueGrid.prototype.attachCallBackAfterRender = QueueGrid.prototype.attachCallBackAfterRender;
+
+/**
+* It loads a set of data collections
+*
+* @method load
+* @param {dataCollections} Measurements retrieved from v_saxs_datacollections
+*/
+OverviewQueueGrid.prototype.load = function(dataCollections) {	
+	if (dataCollections != null &amp;&amp; dataCollections.length &gt; 0) {				
+		this.render(_.orderBy(dataCollections, [&#039;MeasurementToDataCollection_dataCollectionId&#039;, &#039;MeasurementToDataCollection_dataCollectionOrder&#039;], [&#039;desc&#039;, &#039;desc&#039;]));
+	} else {
+		$(&#039;#&#039; + this.id).hide().html(&quot;&lt;h4&gt;No results found&lt;/h4&gt;&quot;).fadeIn(&#039;fast&#039;);
+	}	
+};
+
+/**
+* Fills overview.queue.grid.test.template with data collections
+*
+* @method render
+* @param {dataCollections} Measurements retrieved from v_saxs_datacollections
+*/
+OverviewQueueGrid.prototype.render = function(data) {
+	var html = &quot;&quot;;
+
+	/** Calculates the rowSpan so the template knows when to plot the images. Also finds where to draw stronger borders*/	
+	var grouped = _.groupBy(data, &quot;MeasurementToDataCollection_dataCollectionId&quot;);
+    
+	_.map(data, function(o){ 
+        if(o.Subtraction_subtractionId){
+		    o.urlDownload = EXI.getDataAdapter().saxs.subtraction.getZip(o.Subtraction_subtractionId);
+        }
+        if(o.Merge_mergeId){
+		    o.urlSpecific = EXI.getDataAdapter().saxs.frame.downloadFramesByAverageIdList(o.Merge_mergeId);
+        }
+	});
+     
+	for (var dataCollectionId in grouped){
+		var last = _.maxBy(grouped[dataCollectionId], &#039;MeasurementToDataCollection_dataCollectionOrder&#039;);
+        if(last){
+            if (last.Subtraction_subtractionId){
+                last.rowSpan = grouped[dataCollectionId].length;
+                last.scattering = this.getImage(last.Subtraction_subtractionId,&quot;scattering&quot;);
+                last.kratky = this.getImage(last.Subtraction_subtractionId,&quot;kratky&quot;);
+                last.density = this.getImage(last.Subtraction_subtractionId,&quot;density&quot;);
+                last.guinier = this.getImage(last.Subtraction_subtractionId,&quot;guinier&quot;);
+                if (last.Run_runId) {
+                    last.dataReduction = true;
+                }
+            }
+		 _.minBy(grouped[dataCollectionId], &#039;MeasurementToDataCollection_dataCollectionOrder&#039;).rowClass = &quot;blue-bottom-border-row&quot;;
+        }
+	}
+    
+	dust.render(&quot;overview.queue.grid.template&quot;, data, function(err, out) {   
+		html = html + out;
+	});
+	
+	$(&#039;#&#039; + this.id).html(html);
+	
+	var nodeWithScroll = document.getElementById(document.getElementById(this.id).parentNode.parentNode.parentNode.id);
+	
+	this.attachCallBackAfterRender(nodeWithScroll);
+};
+
+
+/**
+* Return an Ext HTML object with a DIV
+*
+* @method getPanel
+*/
+OverviewQueueGrid.prototype.getPanel = function(){ 
+	return {
+		html : &#039;&lt;div id=&quot;&#039; + this.id + &#039;&quot;&gt;&lt;/div&gt;&#039;,
+		autoScroll : true,
+		height : this.height
+	}
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

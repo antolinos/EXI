@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">109.46</p>
+      <p class="stat">111.58</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">266</p>
+      <p class="stat">388</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">37.70</p>
+      <p class="stat">37.89</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.25</p>
+      <p class="stat">3.41</p>
     </div>
   </div>
 </div>
@@ -140,17 +140,6 @@ MainMenu.prototype.getHomeItem = function() {
 
 MainMenu.prototype.getShipmentItem = function() { 
 	var _this = this;
-	function onItemCheck(item, checked) {
-		if (item.text == &quot;Shipments&quot;) {
-			location.hash = &quot;/proposal/shipping/nav&quot;;
-		}
-		if (item.text == &quot;Manage shipping addresses&quot;) {
-			location.hash = &quot;/proposal/addresses/nav&quot;;
-		}
-		if (item.text == &quot;Shipment List&quot;) {
-			location.hash = &quot;/proposal/shipping/nav&quot;;
-		}
-	}
 
 	function getBiosaxsMenu() {
 		var _this = this;
@@ -158,7 +147,6 @@ MainMenu.prototype.getShipmentItem = function() {
 			if (item.text == &quot;Stock Solutions&quot;) {
 				location.hash = &quot;/saxs/stocksolution/nav&quot;;
 			}
-			
 		}
 
 		return Ext.create(&#039;Ext.menu.Menu&#039;, {
@@ -170,14 +158,117 @@ MainMenu.prototype.getShipmentItem = function() {
 						} 
 			] });
 	}
+
+	function getLabContactsMenu() {
+		var _this = this;
+		function onItemCheck(item, checked) {
+			if (item.text == &quot;Add new&quot;) {
+				var addressEditForm = new AddressEditForm();
 	
+				addressEditForm.onSaved.attach(function (sender, address) {
+					window.close();
+					location.hash = &quot;#/proposal/address/&quot; + address.labContactId + &quot;/main&quot;;
+				});
+
+				var window = Ext.create(&#039;Ext.window.Window&#039;, {
+					title : &#039;Shipping Address Card&#039;,
+					height: 550,
+	   				width: 750,
+					modal : true,
+					layout : &#039;fit&#039;,
+					items : [ addressEditForm.getPanel() ],
+					buttons : [ {
+							text : &#039;Save&#039;,
+							handler : function() {
+								addressEditForm.save();
+							}
+						}, {
+							text : &#039;Cancel&#039;,
+							handler : function() {
+								window.close();
+							}
+						} ]
+				}).show();
+
+				addressEditForm.load();
+			} else if (item.text == &quot;List&quot;) {
+				location.hash = &quot;/proposal/addresses/nav&quot;;
+			}
+		}
+
+		return Ext.create(&#039;Ext.menu.Menu&#039;, {
+			items : [ 
+						{
+							text : &#039;Add new&#039;,
+							icon : &#039;../images/icon/add.png&#039;,
+							handler : onItemCheck,
+							disabled : true
+						}, {
+							text : &#039;List&#039;,
+							icon : &#039;../images/icon/ic_list_black_24dp.png&#039;,
+							handler : onItemCheck 
+						} 
+			] });
+	}
 	
+	function getShipmentsMenu() {
+		var _this = this;
+		function onItemCheck(item, checked) {
+			if (item.text == &quot;Add new&quot;) {
+				var shippingEditForm = new ShipmentEditForm({width : 600, height : 700});
+				
+				shippingEditForm.onSaved.attach(function (sender, shipment) {
+					window.close();
+					location.hash = &quot;#/shipping/&quot;+ shipment.shippingId +&quot;/main&quot;
+				});
+
+				var window = Ext.create(&#039;Ext.window.Window&#039;, {
+					title : &#039;Shipment&#039;,
+					height : 500,
+					width : 650,
+					padding : &#039;10 10 10 10&#039;,
+					modal : true,
+					layout : &#039;fit&#039;,
+					items : [ shippingEditForm.getPanel() ],
+					buttons : [ {
+							text : &#039;Save&#039;,
+							handler : function() {
+								shippingEditForm.saveShipment();
+							}
+						}, {
+							text : &#039;Cancel&#039;,
+							handler : function() {
+								window.close();
+							}
+						} ]
+				}).show();
+
+				shippingEditForm.load();
+			} else if (item.text == &quot;List&quot;) {
+				location.hash = &quot;/proposal/shipping/nav&quot;;
+			}
+			
+		}
+
+		return Ext.create(&#039;Ext.menu.Menu&#039;, {
+			items : [ 
+						{
+							text : &#039;Add new&#039;,
+							icon : &#039;../images/icon/add.png&#039;,
+							handler : onItemCheck 
+						}, {
+							text : &#039;List&#039;,
+							icon : &#039;../images/icon/ic_list_black_24dp.png&#039;,
+							handler : onItemCheck 
+						} 
+			] });
+	}
 	
 	return {
 		text : this._convertToHTMLWhiteSpan(&quot;Shipment&quot;),
 		cls : &#039;ExiSAXSMenuToolBar&#039;,
 //		hidden : this.isHidden,
-        disabled : true,
+        disabled : false,
 		menu : Ext.create(&#039;Ext.menu.Menu&#039;, {
 			items : [ 
 						{
@@ -188,18 +279,49 @@ MainMenu.prototype.getShipmentItem = function() {
 						{
 							text : &#039;Manage shipping addresses&#039;,
 							icon : &#039;../images/icon/contacts.png&#039;,
-							handler : onItemCheck 
+							menu : getLabContactsMenu() 
 						}, 
 						{
 							text : &#039;Shipments&#039;,
 							icon : &#039;../images/icon/shipping.png&#039;,
-							handler : onItemCheck 
+							menu : getShipmentsMenu() 
 						} 
 					] })
 	};
 
 };
 
+MainMenu.prototype.getDataExplorerMenu = function() {
+	function onItemCheck(item, checked) {
+		if (item.text == &quot;Calendar&quot;) {
+			location.hash = &quot;/session/nav&quot;;
+		}
+		if (item.text == &quot;Experiments&quot;) {
+			location.hash = &quot;/experiment/nav&quot;;
+		}
+	}
+	var menu = Ext.create(&#039;Ext.menu.Menu&#039;, {
+		items : [ 
+			{
+				id : &#039;calendar_item&#039;,
+				text : &#039;Calendar&#039;,
+				icon : &#039;../images/icon/sessions.png&#039;,
+				handler : onItemCheck
+			}
+		] ,
+		listeners : {
+            &#039;beforeshow&#039; : function(menu) {
+                if (EXI.proposalManager.getProposals().length == 0) {
+					Ext.getCmp(&#039;calendar_item&#039;).disable();
+				} else {
+					Ext.getCmp(&#039;calendar_item&#039;).enable();
+				}
+            }
+        }
+	});
+
+	return menu;
+};
 
 MainMenu.prototype.getHelpMenu = function() {
 	var _this = this;
@@ -338,11 +460,11 @@ MainMenu.prototype.getLoginButton = function() {
 };
 
 MainMenu.prototype.getPanel = function() {
-	var _this = this;
+	
 	
 	this.credentialsMenu = new Ext.menu.Menu({
-		id : _this.id + &quot;menu&quot;,
-		items : [_this.getAddCredentialMenu()] 
+		id : this.id + &quot;menu&quot;,
+		items : [this.getAddCredentialMenu()] 
 	});
 	
 	var items  = this.getMenuItems();

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - saxs/widget/queuegridtest.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>saxs/widget/queuegridtest.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">97.97</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">187</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">36.84</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.23</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+* Displays the data collections by session or acronym of the protein in a collapsed way
+*
+* @class QueueGridTest
+* @constructor
+*/
+function QueueGridTest(args) {
+    this.id = BUI.id();
+
+    QueueGrid.call(this,args);
+    this.imgWidth = 130;
+
+    this.store = Ext.create(&#039;Ext.data.Store&#039;, {
+            fields: [&quot;experiment&quot;]
+     });
+}
+
+QueueGridTest.prototype.getPercentage = QueueGrid.prototype.getPercentage;
+QueueGridTest.prototype.getImage = QueueGrid.prototype.getImage;
+QueueGridTest.prototype.parseDataById = QueueGrid.prototype.parseDataById;
+QueueGridTest.prototype.attachCallBackAfterRender = QueueGrid.prototype.attachCallBackAfterRender;
+
+
+QueueGridTest.prototype.load = function(experiment){
+    var _this = this;
+    
+    this.setLoading();
+    try{
+        if (experiment.experimentId){
+            var onSuccess = function(sender, data){
+                if (data != null) {
+                    _this.dataByDataCollectionId = _this.parseDataById(data);
+                    _this.store.loadData(_.keys(_.keyBy(data,&#039;dataCollectionId&#039;)), true);
+                    _this.attachCallBackAfterRender(document.getElementById(_this.id + &quot;-body&quot;).childNodes[0]);
+                }
+                _this.setLoading(false);
+            };
+
+            EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByExperimentId(experiment.experimentId);
+        } else {
+            this.dataByDataCollectionId = this.parseDataById(experiment);
+            this.store.loadData(_.keys(_.keyBy(experiment,&#039;dataCollectionId&#039;)), true);
+            _this.attachCallBackAfterRender();
+            _this.setLoading(false);
+        }
+    }
+    catch(e){
+        console.log(e);
+    }
+};
+
+QueueGridTest.prototype.getPanel = function (dataCollectionGroup) {
+    var _this = this;
+    this.panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
+        id: this.id,
+        border: 1,        
+        store: this.store,       
+        disableSelection: true,
+        columns: this.getColumns(),
+        viewConfig: {
+            enableTextSelection: true,
+            stripeRows: false
+        }
+    });
+
+    return this.panel;
+};
+
+QueueGridTest.prototype.setLoading = function(bool){
+	this.panel.setLoading(bool);
+};
+
+QueueGridTest.prototype.filter = function(key, value) {
+    var filtered = _.filter(this.dataByDataCollectionId,function(o) {return o[0][&quot;bufferAcronym&quot;] == value});
+    this.store.loadData(_.keys(_.keyBy([].concat.apply([], filtered),&#039;dataCollectionId&#039;)));
+}
+
+
+QueueGridTest.prototype.getColumns = function() {
+    var _this = this;
+    var columns = [
+        {
+            dataIndex: &#039;experiment&#039;,
+            name: &#039;experiment&#039;,
+            flex: 1.5,
+            hidden: false,
+            renderer: function(grid, e, record) {
+
+                var dataCollectionId = record.data;
+                var currentDataCollection = _this.dataByDataCollectionId[dataCollectionId];                              
+                var html = &quot;&quot;;
+
+                var codes = [];
+                var macromoleculeInfo = [];
+                var averages = [];
+                var expTemp = currentDataCollection[0].exposureTemperature + &quot; C&quot;;
+
+                var rg = &quot;NA&quot;;
+                var points = &quot;NA&quot;;
+                if (currentDataCollection[0].rg != null) {
+                    rg = Number(currentDataCollection[0].rg).toFixed(_this.decimals);
+                    points = currentDataCollection[0].firstPointUsed + &quot; - &quot; + currentDataCollection[0].lastPointUsed + &quot; (&quot; + (currentDataCollection[0].lastPointUsed - currentDataCollection[0].firstPointUsed) + &quot;)&quot;;
+                }	
+                var I0 = &quot;NA&quot;;
+                if (currentDataCollection[0].I0 != null){
+                    var I0 = Number(currentDataCollection[0].I0).toFixed(_this.decimals-2);
+                    var I0Stdev = Number(Number(currentDataCollection[0].I0Stdev).toFixed(_this.decimals)).toExponential();
+                }
+
+                var rgGnom = &quot;NA&quot;;
+                if (currentDataCollection[0].rgGnom != null) {
+                    rgGnom = Number(currentDataCollection[0].rgGnom).toFixed(_this.decimals);
+                }	
+                var total = &quot;NA&quot;;
+                if (currentDataCollection[0].total != null) {
+                    total = Number(currentDataCollection[0].total).toFixed(_this.decimals);
+                }
+                var dmax = &quot;NA&quot;;
+                if (currentDataCollection[0].dmax != null) {
+                    dmax = Number(currentDataCollection[0].dmax).toFixed(_this.decimals);
+                }
+
+                var volumePorod = &quot;NA&quot;;
+                var mmvolest = &quot;NA&quot;;
+                if (currentDataCollection[0].volumePorod != null) {
+                    volumePorod = Number(currentDataCollection[0].volumePorod).toFixed(_this.decimals);
+                    mmvolest = Number(currentDataCollection[0].volumePorod / 2).toFixed(1) + &quot; - &quot;
+                                            + Number(currentDataCollection[0].volumePorod / 1.5).toFixed(1);
+                }
+
+                var scattering = &quot;&quot;;
+                var kratky = &quot;&quot;;
+                var density = &quot;&quot;;
+                var guinier = &quot;&quot;;
+                var concentration = &quot;&quot;;
+
+                for (var j = 0 ; j &lt; currentDataCollection.length ; j++) {
+                    var experiment = currentDataCollection[j];
+                    // codes.push(experiment.code);
+                    if (experiment.concentration != 0) {
+                        concentration = Number(experiment.concentration).toFixed(_this.decimals-1);
+                    }
+                    if (experiment.macromoleculeId != null) {
+                        scattering = _this.getImage(experiment,&quot;scattering&quot;);
+                        kratky = _this.getImage(experiment,&quot;kratky&quot;);
+                        density = _this.getImage(experiment,&quot;density&quot;);
+                        guinier = _this.getImage(experiment,&quot;guinier&quot;);
+                    }
+                    var macromoleculeAcronym = &quot;&quot;;
+                    if (experiment.macromoleculeAcronym != null) {
+                        macromoleculeAcronym = experiment.macromoleculeAcronym;
+                    }
+                    // macromoleculeInfo.push({ acronym : macromoleculeAcronym, concentration : concentration});
+                    // averages.push(_this.getPercentage(experiment.framesMerge,experiment.framesCount));
+
+                    codes.push({code : experiment.code, acronym : macromoleculeAcronym, average : _this.getPercentage(experiment.framesMerge,experiment.framesCount)});
+                }                      
+
+                var templateData = {
+									codes : codes,
+									macromoleculeAcronym : macromoleculeAcronym,
+                                    concentration : concentration,
+									// averages : averages,
+									expTemp : expTemp,
+									rg : rg,
+									points : points,
+									I0 : I0,
+									I0Stdev : I0Stdev,
+									rgGnom : rgGnom,
+									total : total,
+									dmax : dmax,
+									volumePorod : volumePorod,
+									mmvolest : mmvolest,
+									scattering : scattering,
+									kratky : kratky,
+									density : density,
+									guinier : guinier,
+									imgWidth : _this.imgWidth,
+                                    creationDate : currentDataCollection[0].creationDate
+								};
+
+                dust.render(&quot;queue.grid.test.template&quot;, templateData, function(err, out) {                                                                       
+                    html = html + out;
+                });
+                
+                return html;
+
+            }
+        }
+    ];
+
+    return columns;
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

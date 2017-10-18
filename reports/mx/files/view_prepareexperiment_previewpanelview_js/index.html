@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">104.96</p>
+      <p class="stat">104.12</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">139</p>
+      <p class="stat">142</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">25.10</p>
+      <p class="stat">26.31</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.01</p>
+      <p class="stat">1.07</p>
     </div>
   </div>
 </div>
@@ -116,7 +116,7 @@ function PreviewPanelView (args) {
                 enableMouseOver : true
             };
 
-    this.onEmptyButtonClicked = new Event(this);
+    this.onUnloadButtonClicked = new Event(this);
 };
 
 /**
@@ -146,14 +146,16 @@ PreviewPanelView.prototype.getPanel = function () {
         },
         listeners: {
             click: function(button) {
-                if (button.text == &quot;EMPTY&quot;) {
-                    _this.onEmptyButtonClicked.notify();
+                if (button.text != null){
+                    if (button.text.split(&quot; &quot;)[0] == &quot;Unload&quot;) {
+                        _this.onUnloadButtonClicked.notify();
+                    }
                 }
             }
         }
     });
 
-    var infoContainer = Ext.create(&#039;Ext.panel.Panel&#039;, {
+    this.infoContainer = Ext.create(&#039;Ext.panel.Panel&#039;, {
         layout : &#039;vbox&#039;,
         width : this.width/2,
         height : this.height,
@@ -167,12 +169,12 @@ PreviewPanelView.prototype.getPanel = function () {
     });
 
     this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
-        margin : 5,
+        margins : {top : 25},
         cls : &#039;border-grid&#039;,
         layout : &#039;hbox&#039;,
         width : this.width,
         height : this.height,
-        items : [infoContainer, this.previewPanel ]
+        items : [this.infoContainer, this.previewPanel ]
     });
 
     return this.panel;
@@ -199,7 +201,6 @@ PreviewPanelView.prototype.load = function (containerId, capacity, data, instruc
                             html    : html,
                             margin  : 6
                     });
-
     this.instructionsButton.setText(instructionsButtonText);
     this.puckData.containerId = containerId;
     if (capacity == 10){
@@ -230,9 +231,11 @@ PreviewPanelView.prototype.load = function (containerId, capacity, data, instruc
 * @return
 */
 PreviewPanelView.prototype.clean = function () {
-    this.previewPanel.removeAll();
-    this.infoPanel.removeAll();
-    this.instructionsButton.setText(&quot;&quot;);
+    if (this.previewPanel){
+        this.previewPanel.removeAll();
+        this.infoPanel.removeAll();
+        this.instructionsButton.setText(&quot;&quot;);
+    }
 };</textarea>
   </div>
 </div>

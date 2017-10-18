@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - mx/view/datacollection/grid/sessionsummarydatacollectiongrid.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>mx/view/datacollection/grid/sessionsummarydatacollectiongrid.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">113.55</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">484</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">41.30</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">5.33</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+* Displays the data collections by session or acronym of the protein in a collapsed way
+*
+* @class MXDataCollectionGrid
+* @constructor
+*/
+function SessionSummaryDataCollectionGrid(args) {
+    this.id = BUI.id();
+    this.template = &quot;mxdatacollectiongrid.template&quot;;
+    DataCollectionGrid.call(this,args);
+}
+
+SessionSummaryDataCollectionGrid.prototype._getAutoprocessingStatistics = DataCollectionGrid.prototype._getAutoprocessingStatistics;
+//SessionSummaryDataCollectionGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
+SessionSummaryDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.prototype.loadMagnifiers;
+
+
+
+SessionSummaryDataCollectionGrid.prototype.parseData = function(dataCollectionGroup) {
+    var parsed = [];
+    for (index in dataCollectionGroup){                                   
+                var data = dataCollectionGroup[index];
+                /** For thumbnail */
+                data.urlThumbnail = EXI.getDataAdapter().mx.dataCollection.getThumbNailById(data.lastImageId);
+                data.url = EXI.getDataAdapter().mx.dataCollection.getImageById(data.lastImageId);
+                data.ref = &#039;#/mx/beamlineparameter/datacollection/&#039; + data.DataCollection_dataCollectionId + &#039;/main&#039;;
+                data.runNumber = data.DataCollection_dataCollectionNumber;
+                data.prefix = data.DataCollection_imagePrefix;
+                data.comments = data.DataCollectionGroup_comments;
+                data.sample = data.BLSample_name;
+                data.folder = data.DataCollection_imageDirectory;
+
+                
+                try{
+                    if (data.autoProcIntegrationId){                        
+                        data.resultsCount = _.uniq(data.autoProcIntegrationId.replace(/ /g,&#039;&#039;).split(&quot;,&quot;)).length;
+                    }
+                }
+                catch(e){}
+               
+               
+                
+                /** For crystal */
+                data.xtal1 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 1);
+                data.xtal2 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 2);
+                data.xtal3 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 3);
+                data.xtal4 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 4);
+
+                /** Image quality indicator **/
+                data.indicator = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(data.DataCollection_dataCollectionId);                              
+
+                /** Gets the gif for snapshots if there is a workflow with snapshots **/
+                if (data.WorkflowStep_workflowStepType){
+                    if (data.WorkflowStep_workflowStepType.indexOf(&#039;Snapshots&#039;) != -1){
+                        if (data.WorkflowStep_workflowStepId){
+                            var listOfIds = data.WorkflowStep_workflowStepId.split(&#039;,&#039;);
+                            var listOfWorkflowStepType = data.WorkflowStep_workflowStepType.split(&#039;,&#039;);
+                            data.xtalAnimated = EXI.getDataAdapter().mx.workflowstep.getImageByWorkflowStepId(listOfIds[_.indexOf(listOfWorkflowStepType, &#039;Snapshots&#039;)]);
+                            this.imageAnimatedURL[data.xtal1] = data.xtalAnimated;
+                            this.imageAnimatedURL[data.xtalAnimated] = data.xtal1;
+                            data.hasAnimated = true;
+                        }
+                        
+                    }
+                }
+                
+                data.onlineresults = this._getAutoprocessingStatistics(data);
+                /** Screening displayed if &#039;Characterization&#039; workflow or if indexing success */ 
+                if (data.Workflow_workflowType) {
+                    if (data.Workflow_workflowType == &#039;Characterisation&#039;) {
+                        data.screeningresults = [true];
+                    } else {
+                        data.screeningresults = [data.ScreeningOutput_indexingSuccess];
+                    }
+                    if (data.screeningresults[0]) {
+                        if (data.ScreeningOutput_indexingSuccess) {
+                            data.indexingresults = [true];
+                        } else {
+                            data.indexingresults = [false];
+                        }
+                    }
+                }
+               
+                /** We dont show screen if there are results of autoprocessing */
+                data.isScreeningVisible = true;
+                if (data.onlineresults){
+                    if (data.onlineresults.length &gt; 0){
+                        data.isScreeningVisible = false;
+                    }                    
+                }
+                /** For the workflows **/
+                if (data.WorkflowStep_workflowStepType) {
+                    data.workflows = new WorkflowSectionDataCollection().parseWorkflow(data);
+                }
+                if (data.workflows == null) {
+                    data.workflows = [];
+                }
+                parsed.push(data);
+                /*
+                dust.render(_this.template, data, function(err, out) {                                                                       
+                    html = html + out;
+                });
+                
+                return html;*/
+
+     }
+     return parsed;
+       
+};
+
+
+/**
+* Loads the store and load the maginifiers
+*
+* @method load
+* @return {dataCollectionGroup} Array of data collections
+*/
+SessionSummaryDataCollectionGrid.prototype.load = function(dataCollectionGroup){
+    try{
+        
+        this.dataCollectionGroup = dataCollectionGroup;
+        var _this = this;
+        var parsedData =this.parseData(dataCollectionGroup);
+        var html = &quot;&quot;;
+        dust.render(_this.template, parsedData, function(err, out) {                                                                       
+                    $(&quot;#&quot; + _this.id).html(out);
+        });
+         
+       
+
+       
+
+        this.loadMagnifiers(dataCollectionGroup);
+        this.attachCallBackAfterRender();
+    }
+    catch(e){
+        console.log(e);
+    }
+};
+
+SessionSummaryDataCollectionGrid.prototype.getPanel = function(){
+    
+    /*var _this = this;
+    this.panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
+        border: 1,        
+        store: this.store,  
+        id: this.id,     
+         minHeight : 900,
+        disableSelection: true,
+        columns: this.getColumns(),
+        viewConfig: {
+            enableTextSelection: true,
+            stripeRows: false
+        }
+    });  
+    return this.panel;*/
+      return &quot;&lt;div  style=&#039;background-color:green;overflow-y:scroll;height:100vh;&#039; id=&#039;&quot; + this.id +&quot;&#039;&gt;&quot;+this.id +&quot;&lt;/div&gt;&quot;
+};
+
+/**
+* Displays the data collection tab with all the data collection related to the data collection group
+*
+* @param {Object} target HTML node where the content will be rendered
+* @param {Integer} dataCollectionGroupId 
+* @method displayDataCollectionTab
+*/
+SessionSummaryDataCollectionGrid.prototype.displayDataCollectionTab = function(target, dataCollectionGroupId) {
+    var _this = this;
+    var onSuccess = function(sender, data){
+       
+        _.forEach(data, function(value) {
+            // URL to image quality indicators
+            value.urlImageQualityIndicators = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(value.dataCollectionId);
+            // Result from auto-processing&gt;                     
+            
+            value.onlineresults = SessionSummaryDataCollectionGrid.prototype._getAutoprocessingStatistics(value);
+            if (value.onlineresults &amp;&amp; value.onlineresults.length &gt; 0){
+                value.bestAutoprocIntegrationId = value.onlineresults[0].autoProcIntegrationId;
+            }
+            // Re-formatted template
+            if (value.fileTemplate.endsWith(&quot;.h5&quot;)) {
+                // Check if characterisation
+                if (Math.abs(value.overlap) &gt; 1) {
+                    value.formattedFileTemplate = value.fileTemplate.replace(&quot;%04d&quot;, &quot;?_master&quot;);
+                } else {
+                    value.formattedFileTemplate = value.fileTemplate.replace(&quot;%04d&quot;, &quot;1_master&quot;);
+                };
+            } else {
+                value.formattedFileTemplate = value.fileTemplate.replace(&quot;%04d&quot;, &quot;????&quot;);
+            };
+        });
+        var html = &quot;&quot;;
+        
+        dust.render(&quot;datacollections.mxdatacollectiongrid.template&quot;, data, function(err, out) {                                                                                               
+            html = html + out;
+        });
+        $(target).html(html);
+        $(&quot;.dataCollection-edit&quot;).unbind(&#039;click&#039;).click(function(sender){
+            var dataCollectionId = sender.target.id.split(&quot;-&quot;)[0];
+            _this.editComments(dataCollectionId,&quot;DATACOLLECTION&quot;);
+        });
+        _this.panel.doLayout();
+    };
+    
+    var onError = function(sender, msg){
+        $(target).html(&quot;Error retrieving data &quot; + msg);        
+    };
+    /** Retrieve data collections */   
+    EXI.getDataAdapter({onSuccess:onSuccess, onError:onError}).mx.dataCollection.getDataCollectionsByDataCollectionGroupId(dataCollectionGroupId);
+};
+
+/**
+* Displays the data collection tab with all the data collection related to the data collection group
+*
+* @param {Object} target HTML node where the content will be rendered
+* @param {Integer} dataCollectionGroupId 
+* @method displayDataCollectionTab
+*/
+SessionSummaryDataCollectionGrid.prototype.displayResultAutoprocessingTab = function(target, dataCollectionId) {
+    var _this = this;
+    var onSuccess = function(sender, data){            
+        /** Parsing data */
+        var html = &quot;&quot;;    
+         
+        var autoprocessingData =  new AutoProcIntegrationGrid().parseData(data[0]);
+        
+        dust.render(&quot;collapsed.autoprocintegrationgrid.template&quot;, autoprocessingData, function(err, out) {            
+                    html = html + out;
+        });
+        $(target).html(html);
+
+        //_this.panel.doLayout();
+        $(&quot;.autoprocintegrationrow&quot;).addClass(&quot;clickable-row&quot;);
+        $(&quot;.autoprocintegrationrow&quot;).click(function(sender) {
+            
+            if (_.indexOf(sender.target.classList,&quot;glyphicon-folder-close&quot;) &gt; 0) {
+                    var autoprocProgramId = sender.target.id.split(&quot;_&quot;)[1];
+                    var selectedProcessingProgram = _.find(autoprocessingData, {&#039;v_datacollection_summary_phasing_autoProcProgramId&#039;:Number(autoprocProgramId)});
+                    
+                    var panel = Ext.create(&#039;Ext.window.Window&#039;, {
+                        title : selectedProcessingProgram.v_datacollection_processingPrograms + &quot; [&quot; + selectedProcessingProgram.v_datacollection_summary_phasing_autoproc_space_group + &quot;]&quot;,
+                        height : 450,
+                        width : 600,
+                        modal : true,
+                        layout : &#039;fit&#039;,
+                        items : [ {
+                                html : &#039;&lt;div id=&quot;&#039; + autoprocProgramId + &#039;&quot;&gt;Test&lt;/div&gt;&#039;,
+                                margin : 10
+
+                        } ],
+                        buttons : [ {
+                                text : &#039;Close&#039;,
+                                handler : function() {
+                                    window.close();
+                                }
+                            } ]
+                    }).show();
+
+                    var onSucessFiles = function(sender, files){  
+                        var html = &quot;&quot;;                       
+                         dust.render(&quot;files.collapsed.autoprocintegrationgrid.template&quot;, files[0], function(err, out) {
+                                html = html + out;
+                         });
+                          $(&quot;#&quot; + autoprocProgramId).html(html);  
+                    };                 
+
+                    EXI.getDataAdapter({onSuccess : onSucessFiles}).mx.autoproc.getAttachmentListByautoProcProgramsIdList([autoprocProgramId])
+                  
+            }           
+        });
+    };
+    var onError = function(sender, msg){
+        $(target).html(&quot;Error retrieving data &quot; + msg);        
+    };                    
+                    
+    EXI.getDataAdapter({onSuccess : onSuccess}).mx.autoproc.getViewByDataCollectionId(dataCollectionId);  
+};
+
+/**
+* Displays the data worflows tab
+*
+* @param {Object} target HTML node where the content will be rendered
+* @param {Integer} dataCollectionId 
+* @method displayWorkflowsTab
+*/
+SessionSummaryDataCollectionGrid.prototype.displayWorkflowsTab = function(target, dataCollectionId) {
+   var dc =_.find(grid.dataCollectionGroup, {&quot;DataCollection_dataCollectionId&quot;:Number(dataCollectionId)});
+   var _this = this;
+    if (dc){
+        var html = &quot;&quot;;
+        var items = (new WorkflowSectionDataCollection().parseWorkflow(dc));
+        dust.render(&quot;workflows.mxdatacollectiongrid.template&quot;,  {items : items, dataCollectionId : dataCollectionId}, function(err, out) {
+                        html = html + out;
+        });
+        $(target).html(html);
+        _this.panel.doLayout();
+    }   
+};
+
+/**
+* Displays the data worflows tab
+*
+* @param {Object} target HTML node where the content will be rendered
+* @param {Integer} dataCollectionGroupId 
+* @param {String} PhasingStep_method [SAD | MR ] 
+* @method displayWorkflowsTab
+*/
+SessionSummaryDataCollectionGrid.prototype.displayPhasingTab = function(target, dataCollectionGroupId, PhasingStep_method) {
+    var phasingGridView = new PhasingGridView();    
+    phasingGridView.load(dataCollectionGroupId,PhasingStep_method);
+    phasingGridView.printHTML(target);
+
+};
+
+/**
+* Displays the sample tab
+*
+* @param {Object} target HTML node where the content will be rendered
+* @param {Integer} dataCollectionId 
+* @method displaySampleTab
+*/
+SessionSummaryDataCollectionGrid.prototype.displaySampleTab = function(target, dataCollectionId) {                 
+    var dc =_.find(grid.dataCollectionGroup, {&quot;DataCollection_dataCollectionId&quot;:Number(dataCollectionId)});
+    if (dc){
+        /** Loading crystal snapshots within the DIV with id = sa_{.DataCollection_dataCollectionId}_crystal_snapshots */
+         //{&gt;&quot;crystalsnapshots.sample.mxdatacollectiongrid.template&quot;  /}  
+         console.log(dc);
+         var crystalSnapShotDIV = &quot;sa_&quot; + dataCollectionId + &quot;_crystal_snapshots&quot;;
+         if ($(&quot;#&quot; + crystalSnapShotDIV)){
+             var html = &quot;&quot;;    
+         
+            dust.render(&quot;crystalsnapshots.sample.mxdatacollectiongrid.template&quot;,  dc, function(err, out) {
+                        html = html + out;
+            });
+            $(&quot;#&quot; + crystalSnapShotDIV).html(html);    
+         }
+
+        if ($(&quot;#sample_puck_layout_&quot; +dataCollectionId)){
+            if (dc.Container_containerId){
+                var containers =_.filter(grid.dataCollectionGroup, {&quot;Container_containerId&quot;:Number(dc.Container_containerId)});
+                if(containers){
+                    var dataCollectionIds = {};
+                    for (var i = 1 ; i &lt;= containers[0].Container_capacity ; i++) {
+                        var sampleByLocation = _.filter(containers,{&quot;BLSample_location&quot;:i.toString()});
+                        if (sampleByLocation.length &gt; 0) {
+                            var ids = [];
+                            for (sample in sampleByLocation){
+                                ids.push(sampleByLocation[sample].DataCollection_dataCollectionId);
+                            }
+                            dataCollectionIds[i] = ids.toString();
+                        }
+                    }
+                }
+                var attributesContainerWidget = {
+                                                mainRadius : 100, 
+                                                enableMouseOver : false, 
+                                                enableClick : false,
+                                                dataCollectionIds : dataCollectionIds
+                };
+
+                var puckLegend = new PuckLegend();
+
+                $(&quot;#sample_puck_legend_&quot; + dataCollectionId).html(puckLegend.getPanel().html);
+                
+                var onSuccess = function(sender, samples){
+                    if (samples){
+                        var puck = new UniPuckWidget(attributesContainerWidget);
+                        if (dc.Container_capacity == 10){
+                            puck = new SpinePuckWidget(attributesContainerWidget);
+                        }
+                        var locations = _.map(samples,&quot;BLSample_location&quot;).map(function (i) {return parseInt(i)});
+                        var maxLocation = _.max(locations);
+                        if (maxLocation) {
+                            if (maxLocation &gt; 10) {
+                                puck = new UniPuckWidget(attributesContainerWidget);
+                            } else {
+                                puck = new SpinePuckWidget(attributesContainerWidget);
+                            }
+                        }
+                        $(&quot;#sample_puck_layout_&quot; + dataCollectionId).html(puck.getPanel().html);
+                        puck.loadSamples(samples,dc.BLSample_location);
+                    }
+                };
+                
+                EXI.getDataAdapter({onSuccess : onSuccess}).mx.sample.getSamplesByContainerId(dc.Container_containerId);
+            }
+        }
+    }
+};
+
+/**
+* Attaches the events to lazy load to the images. Images concerned are with the class img-responsive and smalllazy
+*
+* @method attachCallBackAfterRender
+*/
+SessionSummaryDataCollectionGrid.prototype.attachCallBackAfterRender = function() {
+    
+    var _this = this;                              
+
+    var nodeWithScroll = document.getElementById(document.getElementById(_this.id).parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id);
+    var lazy = {
+            bind: &#039;event&#039;,
+            /** !!IMPORTANT this is the parent node which contains the scroll **/
+            appendScroll: nodeWithScroll,
+            beforeLoad: function(element) {
+                console.log(&#039;image &quot;&#039; + (element.data(&#039;src&#039;)) + &#039;&quot; is about to be loaded&#039;);
+               
+            },           
+            onFinishedAll: function() {
+                EXI.mainStatusBar.showReady();
+            }
+    };
+       
+    var timer1 = setTimeout(function() {  $(&#039;.img-responsive&#039;).lazy(lazy);}, 500);
+    var timer2 = setTimeout(function() {  $(&#039;.smalllazy&#039;).lazy(lazy);}, 500); 
+    
+    var tabsEvents = function(grid) {
+            this.grid = grid;
+            $(&#039;a[data-toggle=&quot;tab&quot;]&#039;).on(&#039;shown.bs.tab&#039;, function (e) {
+                var target = $(e.target).attr(&quot;href&quot;); 
+                if (target){
+                    /** Activate tab of data collections */
+                    if (target.startsWith(&quot;#dc&quot;)){
+                    var dataCollectionGroupId = target.slice(4);
+                    _this.displayDataCollectionTab(target, dataCollectionGroupId);
+                    }
+                    
+                    if (target.startsWith(&quot;#re&quot;)){
+                        var dataCollectionId = target.slice(4);  
+                        _this.displayResultAutoprocessingTab(target, dataCollectionId);                                       
+                    }
+
+                    if (target.startsWith(&quot;#sa&quot;)){                    
+                        var dataCollectionId = target.slice(4);                        
+                        _this.displaySampleTab(target, dataCollectionId);                   
+                    }
+                    
+                    if (target.startsWith(&quot;#wf&quot;)){      
+                        var dataCollectionId = target.slice(4);
+                        _this.displayWorkflowsTab(target, dataCollectionId);              
+                    
+                    }
+                    
+                    if (target.startsWith(&quot;#ph&quot;)){                           
+                        var dataCollectionGroupId = target.slice(4);
+                        _this.displayPhasingTab(target, dataCollectionGroupId, &#039;SAD&#039;);              
+                    }
+
+                      if (target.startsWith(&quot;#mr&quot;)){                           
+                        var dataCollectionGroupId = target.slice(4);                        
+                        _this.displayPhasingTab(target, dataCollectionGroupId, &#039;MR&#039;); 
+                    }
+                }
+            });
+           //_this.panel.doLayout();
+
+    };
+    var timer3 = setTimeout(tabsEvents, 500, _this);
+
+    var movieEvents = function(grid) {
+        $(&quot;.animatedXtal&quot;).mouseover(function() {               
+            this.src=_this.imageAnimatedURL[this.src]}
+        );
+        $(&quot;.animatedXtal&quot;).mouseout(function() {
+            this.src=_this.imageAnimatedURL[this.src]}
+        );
+       $(&quot;.dataCollectionGroup-edit&quot;).click(function(sender){
+            var dataCollectionGroupId = sender.target.id.split(&quot;-&quot;)[0];
+            _this.editComments(dataCollectionGroupId,&quot;DATACOLLECTIONGROUP&quot;);
+        });
+    };
+    
+    var timer4 = setTimeout(movieEvents, 500, _this);
+};
+
+/**
+* Opens a modal to edit a comment
+* @method editComments
+* @param Integer id The id
+* @param String mode To edit the dataCollection comment use DATACOLLECTION and to edit the dataCollectionGroup comment use DATACOLLECTIONGROUP
+*/
+SessionSummaryDataCollectionGrid.prototype.editComments = function (id,mode) {
+    var comment = $(&quot;#comments_&quot; + id).html().trim();
+    var commentEditForm = new CommentEditForm({mode : mode});
+    commentEditForm.onSave.attach(function(sender,comment) {
+        $(&quot;#comments_&quot; + id).html(comment);
+    });
+    commentEditForm.load(id,comment);
+    commentEditForm.show();
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

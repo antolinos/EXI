@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">119.18</p>
+      <p class="stat">120.89</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">308</p>
+      <p class="stat">372</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">37.85</p>
+      <p class="stat">44.49</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.74</p>
+      <p class="stat">3.45</p>
     </div>
   </div>
 </div>
@@ -100,10 +100,16 @@
 	this.anonymousMenu = null;
 	/** When user is logged in **/
 	this.userMenu = null;
+	/** When user is manager **/
+	this.managerMenu = null;
 	
 	/** If false when opening a new tab it will close the already open ones **/
 	this.keepTabs = false;
 	
+    /** Timers for setInterval methods */
+    this.timers = [];
+    
+
 	
 	this.controllers = [new ExiController(), new ProposalExiController(), new ShippingExiController()];
 	
@@ -114,6 +120,9 @@
 		}
 		if (args.anonymousMenu != null){
 			this.anonymousMenu = args.anonymousMenu;
+		}
+		if (args.managerMenu != null){
+			this.managerMenu = args.managerMenu;
 		}
 		
 		if (args.headerCssClass != null){
@@ -143,48 +152,67 @@
 	});
 	
 	
-	this.credentialManager.onLogin.attach(function(sender){
-		_this.mainMenu.populateCredentialsMenu();
-		_this.setUserMenu();
+	this.credentialManager.onLogin.attach(function(sender, credential){
+		_this.manageMenu(credential);
 	});
 	
 	this.credentialManager.onActiveProposalChanged.attach(function(sender){
 		_this.mainMenu.populateCredentialsMenu();
 	});
 	
+
+
 	/** AUTHENTICATION FORM **/
 	this.authenticationForm = new AuthenticationForm();
-	this.authenticationForm.onAuthenticate.attach(function(sender, args){
-		var authenticationManager = new AuthenticationManager();
-        
-		authenticationManager.onSuccess.attach(function(sender, data){
-            
-			/** This user has been authenticated **/           
-			_this.credentialManager.addCredential(data.user, data.roles, data.token, args.site, args.exiUrl, args.properties);
-			_this.authenticationForm.window.close();			
-			var credential = EXI.credentialManager.getCredentialByUserName(data.user);
-          
-			if (credential.isManager()||credential.isLocalContact()){
-				location.hash = &quot;/welcome/manager/&quot; + data.user + &quot;/main&quot;;
-			}
-			else{
-				location.hash = &quot;/welcome/user/&quot; + data.user + &quot;/main&quot;;        
-			}
-			
-            
-			/** Authenticating EXI in the offline system**/            
-			_this.getDataAdapter().exi.offline.authenticate();
-			
-		});
-		authenticationManager.onError.attach(function(sender, data){
-			alert(&quot;error&quot;);
-		});
-		authenticationManager.login(args.user, args.password, args.site);
+	this.authenticationForm.onAuthenticate.attach(function(sender, args){						
+		 _this.authenticate(args.user, args.password, args.site, args.exiUrl, args.properties, _this.openWelcomePage);				
+		 
 	});
 	
 	this.onAfterRender = new Event(this);
 }
 
+/**
+ * This method will authenticate user/password with site
+ */
+Exi.prototype.authenticate = function(user, password, site, exiURL, properties, doAction) {
+	var _this = this;
+	var authenticationManager = new AuthenticationManager();
+        
+	authenticationManager.onSuccess.attach(function(sender, data){		
+		_this.credentialManager.addCredential(data.user, data.roles, data.token, site, exiURL, properties);			
+	    doAction(user);									
+	});
+	authenticationManager.onError.attach(function(sender, data){
+		alert(&quot;error&quot;);
+	});
+	authenticationManager.login(user, password, site);
+};
+
+Exi.prototype.openWelcomePage = function(user) {	
+	EXI.authenticationForm.window.close();
+	var credential = EXI.credentialManager.getCredentialByUserName(user);
+				
+	if (credential.isManager()||credential.isLocalContact()){
+		location.hash = &quot;/welcome/manager/&quot; + user + &quot;/main&quot;;
+	}
+	else{
+		location.hash = &quot;/welcome/user/&quot; + user + &quot;/main&quot;;        
+	}
+};
+
+
+Exi.prototype.addTimer = function(timer) {
+    this.timers.push(timer);
+    
+};
+
+Exi.prototype.clearTimers = function() {
+    for (var i = 0; i &lt; this.timers.length; i++) {
+        clearTimeout(this.timers[i]);        
+    }   
+    this.timers = [];    
+}
 /**
  * This method append to args the values of the active connection: url, token and proposal
  */
@@ -229,16 +257,28 @@ Exi.prototype.setUserMenu = function() {
 	Ext.getCmp(&quot;mainMenu&quot;).add(EXI.mainMenu.getPanel());
 };
 
+Exi.prototype.setManagerMenu = function() {
+	this.mainMenu = this.managerMenu;
+	Ext.getCmp(&quot;mainMenu&quot;).removeAll();
+	Ext.getCmp(&quot;mainMenu&quot;).add(EXI.mainMenu.getPanel());
+};
+
+Exi.prototype.manageMenu = function (credential) {
+	if (credential.isManager()) {
+		this.setManagerMenu();
+	} else {
+		this.setUserMenu();
+	}
+	this.mainMenu.populateCredentialsMenu();
+}
 
 Exi.prototype.loadSelected = function(selected) {
 };
 
-
-
-
 /**
  * Adds a new Main panel to the center panel
  * @param mainView
+ * @param clearTimers if timers should be removed
  */
 Exi.prototype.addMainPanel = function(mainView) {
 	if (!this.keepTabs){
@@ -246,6 +286,19 @@ Exi.prototype.addMainPanel = function(mainView) {
 	}
 	Ext.getCmp(&#039;main_panel&#039;).add(mainView.getPanel());
 	Ext.getCmp(&#039;main_panel&#039;).setActiveTab(Ext.getCmp(&#039;main_panel&#039;).items.length - 1);
+	
+	this.clearTimers();
+
+    
+};
+
+Exi.prototype.addMainPanelWithTimer = function(mainView) {
+	if (!this.keepTabs){
+		Ext.getCmp(&#039;main_panel&#039;).removeAll();
+	}
+	Ext.getCmp(&#039;main_panel&#039;).add(mainView.getPanel());
+	Ext.getCmp(&#039;main_panel&#039;).setActiveTab(Ext.getCmp(&#039;main_panel&#039;).items.length - 1);
+       
 };
 
 Exi.prototype.getSelectedDataCollections = function() {
@@ -262,6 +315,17 @@ Exi.prototype.addNavigationPanel = function(listView) {
 		Ext.getCmp(&quot;navigation&quot;).expand();
         this.showNavigationPanel();
 	}
+    this.clearTimers();
+};
+
+
+Exi.prototype.addNavigationPanelWithTimer = function(listView) {
+	Ext.getCmp(&#039;navigation&#039;).add(listView.getPanel());
+	if (Ext.getCmp(&quot;navigation&quot;) != null){
+		Ext.getCmp(&quot;navigation&quot;).expand();
+        this.showNavigationPanel();
+	}
+     
 };
 
 Exi.prototype.hideNavigationPanel = function(listView) {
@@ -342,7 +406,7 @@ Exi.prototype.show = function() {
 													region : &#039;west&#039;,
 													width : 250,
 													split : false,
-													title : &#039;Browse by&#039;,
+													title : &#039;Select&#039;,
 													cls : &#039;navigation&#039;,
 													collapsible : true,
 													collapsed : true
@@ -389,8 +453,8 @@ Exi.prototype.show = function() {
 															_this.setAnonymousMenu();
 														}
 														else{
-															_this.setUserMenu();
-															_this.mainMenu.populateCredentialsMenu();
+															var credential = _this.credentialManager.getCredentials()[0];
+															_this.manageMenu(credential);
 														}
 											} } });
 				}

@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">115.32</p>
+      <p class="stat">122.32</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">138</p>
+      <p class="stat">176</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">35.32</p>
+      <p class="stat">20.62</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.32</p>
+      <p class="stat">0.50</p>
     </div>
   </div>
 </div>
@@ -101,11 +101,11 @@ function MXDataCollectionGrid(args) {
     /** DATACOLLECTION, DATACOLLECTION_COLLAPSED, PLATES_VIEW */
     this.renderingType = &#039;DATACOLLECTION&#039;;
 
-    this.uncollapsedDataCollectionGrid = new UncollapsedDataCollectionGrid();
-    this.collapsedDataCollectionGrid = new CollapsedDataCollectionGrid();
-    this.platesDataCollectionGrid = new PlatesDataCollectionGrid();  
+    this.sessionSummaryDataCollectionGrid = new SessionSummaryDataCollectionGrid();
+    this.dataCollectionSummaryGrid = new DataCollectionSummaryGrid();
+    this.containersDataCollectionGrid = new ContainersDataCollectionGrid();  
                                                                     
-    this.activePanel = this.uncollapsedDataCollectionGrid;
+    this.activePanel = this.sessionSummaryDataCollectionGrid;
 }
 
 MXDataCollectionGrid.prototype.getPanel = function(dataCollectionGroup) {
@@ -113,13 +113,21 @@ MXDataCollectionGrid.prototype.getPanel = function(dataCollectionGroup) {
 
     this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {  
         id: this.id,
-        tbar: this.getToolBar(),        
-        items: [_this.activePanel.getPanel(dataCollectionGroup)]
+        height : &quot;50vh&quot;,
+        //tbar: this.getToolBar(),        
+        items: [  
+                {
+                    html : &quot;Here it comes the toolbar: View, report and others&quot;
+                },          
+                {
+                    html : _this.activePanel.getPanel(dataCollectionGroup)
+                }
+            ]
      });
    
     return this.panel;
 };
-
+/*
 MXDataCollectionGrid.prototype.getToolBar = function() {
     var _this = this;
     function onMenuClicked(widget){
@@ -135,27 +143,27 @@ MXDataCollectionGrid.prototype.getToolBar = function() {
 
     var menu =  Ext.create(&#039;Ext.menu.Menu&#039;, {     
         items: [{
-            text: &#039;Data Collection&#039;,
+            text: &#039;Session summary&#039;,
             handler: function(){
                 _this.renderingType = &quot;DATACOLLECTION&quot;;
-                onMenuClicked(_this.uncollapsedDataCollectionGrid);
+                onMenuClicked(_this.sessionSummaryDataCollectionGrid);
             }
         },{
-            text: &#039;Summary&#039;,            
+            text: &#039;Data collections summary&#039;,            
             handler: function(){
                 _this.renderingType = &quot;DATACOLLECTION_COLLAPSED&quot;;
-                onMenuClicked(_this.collapsedDataCollectionGrid);
+                onMenuClicked(_this.dataCollectionSummaryGrid);
             }
         },{
-            text: &#039;Plates&#039;,            
+            text: &#039;Containers&#039;,            
             handler: function(){
-                _this.renderingType = &quot;PLATES&quot;;
+                _this.renderingType = &quot;CONTAINERS&quot;;
                 
-                if (_this.activePanel != _this.platesDataCollectionGrid){
-                    _this.activePanel = _this.platesDataCollectionGrid;
+                if (_this.activePanel != _this.containersDataCollectionGrid){
+                    _this.activePanel = _this.containersDataCollectionGrid;
                     _this.reloadData(_this.dataCollectionGroup);                 
                     if (Ext.getCmp(_this.id + &quot;_search&quot;).getValue() != &quot;&quot;) {
-                       _this.platesDataCollectionGrid.select(_this.filterBy(Ext.getCmp(_this.id + &quot;_search&quot;).getValue()));
+                       _this.containersDataCollectionGrid.select(_this.filterBy(Ext.getCmp(_this.id + &quot;_search&quot;).getValue()));
                     }
                 }
             }
@@ -170,20 +178,51 @@ MXDataCollectionGrid.prototype.getToolBar = function() {
                 iconCls: &#039;bmenu&#039;,  // &lt;-- icon
                 menu : menu  // assign menu by instance
             },
+            &#039;-&gt;&#039;,
+            {
+                html: &#039;&lt;span class=&quot;glyphicon glyphicon-download-alt&quot;&gt;&lt;/span&gt; Best results&#039;,
+                padding: &#039;10px&#039;,
+                hidden : true,
+                handler : function (sender,target) {
+                    data = _this.dataCollectionGroup;
+                    if (_this.filter) {
+                        data = _this.filterBy(_this.filter);
+                    }
+                    var dataCollectionsWithResults = _.filter(data,function(d) {return d.resultsCount});
+                    if (dataCollectionsWithResults &amp;&amp; dataCollectionsWithResults.length &gt; 0){
+                        _this.panel.setLoading();
+                        var onSuccess = function (sender,data) {
+                            _this.panel.setLoading(false);
+                            if (data) {
+                                var parsedResults = [];
+                                for (var i = 0 ; i &lt; data.length ; i++) {
+                                    parsedResults.push(new AutoProcIntegrationGrid().parseData(data[i]))
+                                }
+                                var bestResults = _.filter(_.flatten(parsedResults),function(r) {return r.label == &quot;BEST&quot;});
+                                if (bestResults &amp;&amp; bestResults.length &gt; 0){
+                                    var url = EXI.getDataAdapter().mx.autoproc.downloadAttachmentListByautoProcProgramsIdList(_.map(bestResults,&quot;v_datacollection_summary_phasing_autoProcProgramId&quot;).toString());
+                                    window.open(url,&quot;_blank&quot;);
+                                }
+                            }
+                        }
+
+                        EXI.getDataAdapter({onSuccess : onSuccess}).mx.autoproc.getViewByDataCollectionId(_.map(dataCollectionsWithResults,&quot;DataCollection_dataCollectionId&quot;).toString()); 
+                    }
+                }
+            },
             &#039;-&gt;&#039;, 
             {
                 xtype: &#039;textfield&#039;,
                 id: this.id + &quot;_search&quot;,
                 width: 400,
-                emptyText: &#039;enter search prefix, sample or protein&#039;,
+                emptyText: &#039;enter search prefix, sample, protein or filePath&#039;,
                 listeners: {
                     specialkey: function(field, e) {
                         if (e.getKey() == e.ENTER) {
                             _this.filter = field.getValue();
-
-                            if (_this.renderingType == &quot;PLATES&quot;){     
+                            if (_this.renderingType == &quot;CONTAINERS&quot;){     
                                 if (Ext.getCmp(_this.id + &quot;_search&quot;).getValue() != &quot;&quot;) {                        
-                                    _this.platesDataCollectionGrid.select(_this.filterBy(Ext.getCmp(_this.id + &quot;_search&quot;).getValue()));
+                                    _this.containersDataCollectionGrid.select(_this.filterBy(Ext.getCmp(_this.id + &quot;_search&quot;).getValue()));
                                 } else {
                                     Ext.getCmp(_this.id + &quot;_found&quot;).setText(&quot;&quot;);
                                     _this.reloadData(_this.dataCollectionGroup);
@@ -199,7 +238,7 @@ MXDataCollectionGrid.prototype.getToolBar = function() {
         ]
     });
 };
-
+*/
 MXDataCollectionGrid.prototype.reloadData = function(dataCollections) {
     this.panel.removeAll();
     this.panel.add(this.activePanel.getPanel(this.dataCollectionGroup));
@@ -211,16 +250,15 @@ MXDataCollectionGrid.prototype.load = function(dataCollectionGroup) {
     this.activePanel.load(this.dataCollectionGroup);
 };
 
-
 /**
-* Filters data by prefix, protein acronym or sample
+* Filters data by prefix, protein acronym, sample or image directory
 *
 * @method filterBy
-* @return {String} searchTerm prefix, protein acronym or sample to be searched
+* @return {String} searchTerm prefix, protein acronym, sample or image directory to be searched
 */
 MXDataCollectionGrid.prototype.filterBy = function(searchTerm) {  
     var filtered = _.filter(this.dataCollectionGroup, function(dataCollection) {
-        var params = [&quot;DataCollection_imagePrefix&quot;, &quot;Protein_acronym&quot;, &quot;BLSample_name&quot;];
+        var params = [&quot;DataCollection_imagePrefix&quot;, &quot;Protein_acronym&quot;, &quot;BLSample_name&quot;,&quot;DataCollection_imageDirectory&quot;];
         for (var i = 0; i &lt; params.length; i++) {
             var param = params[i];
             if (dataCollection[param]) {

@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">106.81</p>
+      <p class="stat">109.13</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">298</p>
+      <p class="stat">469</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">39.20</p>
+      <p class="stat">61.22</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.30</p>
+      <p class="stat">4.74</p>
     </div>
   </div>
 </div>
@@ -97,6 +97,8 @@
 function ContainerPrepareSpreadSheet(args){
     this.id = BUI.id();
 
+    this.preselectedRowContainerId = null;
+
     this.height = 600;
     this.width = 600;
     if (args != null){
@@ -110,6 +112,8 @@ function ContainerPrepareSpreadSheet(args){
 
     this.onSelectRow = new Event(this);
     this.onLoaded = new Event(this);
+    this.onBeamlineChanged = new Event(this);
+    this.onUnloadAllButtonClicked = new Event(this);
 };
 
 /**
@@ -123,34 +127,46 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
 
     this.store = Ext.create(&#039;Ext.data.Store&#039;, {
         storeId:&#039;spreadSheedStore&#039;,
-        fields:[&#039;shippingName&#039;, &#039;barCode&#039;, &#039;containerCode&#039;, &#039;containerType&#039;, &#039;sampleCount&#039;, &#039;beamlineName&#039;,&#039;sampleChangerLocation&#039;,&#039;dewarId&#039;,&#039;containerId&#039;,&#039;capacity&#039;],
+        fields:[&#039;shippingName&#039;, &#039;shippingId&#039;, &#039;barCode&#039;, &#039;parcelName&#039;, &#039;containerCode&#039;, &#039;containerType&#039;, &#039;sampleCount&#039;, &#039;beamlineName&#039;,&#039;beamlineCombo&#039;,&#039;sampleChangerLocation&#039;,&#039;dewarId&#039;,&#039;containerId&#039;,&#039;capacity&#039;],
         data: []
     });
 
     this.panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
         title: &#039;Loaded or to be Loaded on MxCube&#039;,
+        buttons: [
+                            {
+                                xtype: &#039;button&#039;,
+                                text: &#039;&lt;div style=&quot;color: white&quot;&gt;Unload all&lt;/div&gt;&#039;,
+                                width: 200,
+                                color: &#039;#FFFFFF&#039;,
+                                scale: &#039;large&#039;,
+                                style: {
+                                    background: &#039;#444444&#039;,
+                                },
+                                handler : function(){                                   
+                                    var onSuccess = function (sender,c) {
+                                        _this.onUnloadAllButtonClicked.notify();
+                                        _this.loadProcessingDewars(_this.sampleChangerWidget);
+                                    }
+                                    EXI.getDataAdapter({onSuccess:onSuccess}).proposal.dewar.emptySampleLocation(_.map(_this.containers,&quot;containerId&quot;));
+                                }
+                            }
+        ],
         store: this.store,
         cls : &#039;border-grid&#039;,
         height  : this.height,
         width  : this.width,
         flex    : 0.5,
-        columns: [
-            /*{
-                dataIndex: &#039;rowIndex&#039;,
-                sortable : false,
-                autoSizeColumn: true,
-                // other config you need..
-                renderer : function(value, metaData, record, rowIndex)
-                {
-                    return rowIndex+1;
-                }
-            },*/
+        columns: [          
             {
                 header: &#039;Shipment&#039;,
                 dataIndex: &#039;shippingName&#039;,
                 type: &#039;text&#039;,
                 flex: 1,
-                readOnly: true
+                readOnly: true,
+                renderer : function(value, metaData, record, rowIndex){                    
+                    return &quot;&lt;a target=&#039;_blank&#039; href=&#039;#/shipping/&quot; + record.data.shippingId + &quot;/main&#039;&gt;&quot; + record.data.shippingName + &quot;&lt;/a&gt;&quot;;
+                }                
             },
              {
                 header: &#039;DewarId&#039;,
@@ -159,7 +175,15 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 flex: 1,
                 hidden : true,
                 readOnly: true
-            },              
+            },  
+            {
+                header: &#039;ShippingId&#039;,
+                dataIndex: &#039;shippingId&#039;,
+                type: &#039;text&#039;,
+                flex: 1,
+                hidden : true,
+                readOnly: true
+            },             
              {
                 header: &#039;ContainerId&#039;,
                 dataIndex: &#039;containerId&#039;,
@@ -168,6 +192,18 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 flex: 1,
                 readOnly: true
             },   
+            {
+                header: &#039;Parcel&#039;,
+                dataIndex: &#039;parcelName&#039;,
+                type: &#039;text&#039;,
+                flex: 1,
+                readOnly: true,
+                renderer : function(value, metaData, record, rowIndex){                    
+                    return &quot;&lt;a target=&#039;_blank&#039; href=&#039;#/shipping/&quot; + record.data.shippingId + &quot;/processing/containerId/&quot; + record.data.containerId + &quot;/edit&#039;&gt;&quot; + record.data.parcelName + &quot;&lt;/a&gt;&quot;;
+                }               
+
+                
+            },
              {
                 header: &#039;Container&#039;,
                 dataIndex: &#039;containerCode&#039;,
@@ -184,6 +220,7 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 header: &#039;Barcode&#039;,
                 dataIndex: &#039;barCode&#039;,
                 type: &#039;text&#039;,
+                hidden : true,
                 flex: 1,
                 readOnly: true
             },
@@ -201,7 +238,7 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                              case &quot;Spinepuck&quot;:
                                 return &quot;&lt;kbd style=&#039;color:black;font-size:11px;background-color:#CCCCCC;&#039;&gt;SPINEPUCK&lt;/kbd&gt;&quot;;  
                             default:
-                               return record.data.containerType;
+                               return &quot;&lt;kbd style=&#039;color:white;font-size:11px;background-color:#000000;&#039;&gt;&quot; + record.data.containerType + &quot;&lt;/kbd&gt;&quot;;
                         }
                 }
             },
@@ -213,48 +250,115 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 hidden :true,
                 readOnly: true
             },
-            { 
+            {
                 header : &#039;Beamline&#039;,
                 dataIndex: &#039;beamlineName&#039;,
+                hidden : true,
                 type: &#039;dropdown&#039;,			        	 								
-                flex: 0.6,
+                flex: 1,
                 source: EXI.credentialManager.getBeamlineNames()
             },
-            {
-                header: &#039;Sample Changer Location&#039;,
+             {
+                header: &#039;Beamline&#039;,
+                dataIndex: &#039;beamlineCombo&#039;,
+                type: &#039;text&#039;,
+                flex: 1,
+                readOnly: true,
+                renderer : function(value, metaData, record, rowIndex){
+                    var beamlines = _.map(EXI.credentialManager.getBeamlinesByTechnique(&quot;MX&quot;),&quot;name&quot;);
+                    beamlines = _.union(beamlines,[record.data.beamlineName]);
+                    _.remove(beamlines, function (beamline) {return _.indexOf([&#039;ID14-4&#039;, &#039;BM14U&#039;, &#039;ID30A-2&#039;], beamline) !== -1});
+                    var templateData = {
+                                            beamlines   : beamlines,
+                                            selected    : record.data.beamlineName,
+                                            containerId : record.data.containerId,
+                                            id          : _this.id
+                                        }
+                    var html = &quot;&quot;;
+                    dust.render(&quot;beamlines.combobox.template&quot;, templateData, function(err, out){
+                        html = out;
+                    });
+                    return html;
+                }
+                
+            },
+             {
+                header: &#039;Cell&#039;,
                 dataIndex: &#039;sampleChangerLocation&#039;,
                 flex: 1,
-                type: &#039;text&#039;
+                type: &#039;text&#039;,
+                tdCls: &#039;scl-cell&#039;,
+                renderer : function(value, metaData, record, rowIndex){
+                    if (record.data.sampleChangerLocation){
+                        if (record.data.sampleChangerLocation != &quot;&quot;){
+                            return  Math.floor((record.data.sampleChangerLocation - 1) /3) +1 ;
+                            
+                        }
+                    }
+                    return record.data.sampleChangerLocation;
+                }
+            },   
+             {
+                header: &#039;Position&#039;,
+                dataIndex: &#039;sampleChangerLocation&#039;,
+                flex: 1,
+                type: &#039;text&#039;,
+                tdCls: &#039;scl-cell&#039;,
+                renderer : function(value, metaData, record, rowIndex){
+                    if (record.data.sampleChangerLocation){
+                        if (record.data.sampleChangerLocation != &quot;&quot;){                           
+                            return ((record.data.sampleChangerLocation - 1)  %3) + 1;
+                        }                        
+                    }
+                     return record.data.sampleChangerLocation;
+                }
+            },     
+            {
+                header: &#039;Absolute position&#039;,
+                dataIndex: &#039;sampleChangerLocation&#039;,
+                flex: 1,
+                type: &#039;text&#039;,
+                tdCls: &#039;scl-cell&#039;,
+                hidden : true
             }       
         ],
         viewConfig: {
             getRowClass: function(record, index, rowParams, store) {
-                if (record.get(&#039;sampleChangerLocation&#039;) == &quot; &quot;) {
-                    return &quot;warning-row&quot;;
+                if (record.get(&#039;containerType&#039;) != &quot;Unipuck&quot; &amp;&amp; record.get(&#039;containerType&#039;) != &quot;Spinepuck&quot;){
+                    return &quot;disabled-row&quot;;
                 }
-                for (var i = 0 ; i &lt; _this.dewars.length ; i++){
-                    var dewar = _this.dewars[i];
-                    if (record.get(&#039;dewarId&#039;) != dewar.dewarId) {
-                        if (record.get(&#039;sampleChangerLocation&#039;) == dewar.sampleChangerLocation){
+                /*if (record.get(&#039;sampleChangerLocation&#039;) == &quot;&quot; || record.get(&#039;sampleChangerLocation&#039;) == &quot; &quot; || record.get(&#039;sampleChangerLocation&#039;) == null ) {
+                    return &quot;warning-row&quot;;
+                }*/
+
+                /** This ckecks if there is a conflict. Same beamline and position */
+                for (var i = 0 ; i &lt; _this.containers.length ; i++){
+                    var dewar = _this.containers[i];
+                    if (record.get(&#039;containerId&#039;) != dewar.containerId &amp;&amp; dewar.beamlineLocation == record.get(&#039;beamlineName&#039;)) {
+                        if (record.get(&#039;sampleChangerLocation&#039;) == dewar.sampleChangerLocation &amp;&amp; dewar.sampleChangerLocation != &quot;&quot;){                        
                             return &quot;puck-error&quot;;
                         }
                     }
                 }
-                if (_this.sampleChangerWidget){
-                    if (record.get(&#039;sampleChangerLocation&#039;) &gt; _this.sampleChangerWidget.sampleChangerCapacity) {
-                        return &quot;warning-row&quot;;
-                    }
-                    var puckToBeFilled = _this.sampleChangerWidget.findPuckById(_this.sampleChangerWidget.convertSampleChangerLocationToId(record.get(&#039;sampleChangerLocation&#039;)));
-                    if (puckToBeFilled.capacity != record.get(&#039;capacity&#039;)){
-                        return &quot;warning-row&quot;;
-                    }
-                }
+                // if (_this.sampleChangerWidget){
+                //     if (record.get(&#039;sampleChangerLocation&#039;) &gt; _this.sampleChangerWidget.sampleChangerCapacity) {
+                //         return &quot;warning-row&quot;;
+                //     }
+                //     var puckToBeFilled = _this.sampleChangerWidget.findPuckById(_this.sampleChangerWidget.convertSampleChangerLocationToId(record.get(&#039;sampleChangerLocation&#039;)));
+                //     if (puckToBeFilled.capacity != record.get(&#039;capacity&#039;)){
+                //         return &quot;warning-row&quot;;
+                //     }
+                // }
                 return &quot;&quot;;
             }
         },
         listeners: {
             itemclick: function(grid, record, item, index, e) {
-                _this.onSelectRow.notify(record);             
+                if (record.data.containerType == &quot;Unipuck&quot; || record.data.containerType == &quot;Spinepuck&quot;){
+                    if (e.target.tagName != &quot;SELECT&quot;){
+                        _this.onSelectRow.notify({record : record, item : item});          
+                    }
+                }
             }
            
 
@@ -269,21 +373,6 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
             
         ]
     });
-
-    //arrowUp and arrowDown listeners. 
-    //Needs the first column of row Index
-    // this.panel.view.addElListener(&#039;keyup&#039;, function(event,row) {
-    //     if (event.keyCode == 38 || event.keyCode == 40) { 
-    //         _this.onSelectRow.notify(_this.panel.store.getAt(Number(row.cells[0].innerText)-1));
-    //     }
-    // });
-
-    // this.panel.on(&#039;boxready&#039;, function() {
-    //     for (var i = 0 ; i &lt; _this.warningRows.length ; i++) {
-    //         var containerId = _this.warningRows[i];
-    //         _this.addClassToRow (containerId, &quot;warning-row&quot;);
-    //     }
-    // });
 
     return this.panel;
 };
@@ -300,9 +389,46 @@ ContainerPrepareSpreadSheet.prototype.loadProcessingDewars = function (sampleCha
     this.panel.setLoading();
     var onSuccessProposal = function(sender, containers) {
         var processingContainers = _.filter(containers, function(e){return e.shippingStatus == &quot;processing&quot;;});
-        _this.load(processingContainers,sampleChangerWidget);
-        _this.panel.setLoading(false);
-        _this.onLoaded.notify(processingContainers);
+        _.map(processingContainers,function(c) {
+            if (c.containerType == &quot;SPINE Puck&quot;){
+                c.containerType = &quot;Spinepuck&quot;;
+            }
+        })
+        //Check if some of the containers have the old value Puck for containerType, in which case, we need to use the sample locations to specify the type
+        var containersFromISPyB = _.filter(processingContainers,{&quot;containerType&quot;:&quot;Puck&quot;});
+        if (containersFromISPyB.length &gt; 0) {
+            var onSampleSuccess = function (sender, samples) {
+                if (samples &amp;&amp; samples.length &gt; 0) {
+                    _.map(samples,function (s) {s.location = parseInt(s.BLSample_location)});
+                    var groupedByContainer = _.groupBy(samples,&quot;Container_containerId&quot;);
+                    _.forEach(groupedByContainer,function(smpls, containerId){
+                                                                var type = &quot;Spinepuck&quot;;
+                                                                if (_.maxBy(smpls,&quot;location&quot;) &gt; 10) {
+                                                                    type = &quot;Unipuck&quot;;  
+                                                                }
+                                                                _.map(processingContainers,function (c) {
+                                                                    if (c.containerId == containerId) {
+                                                                        c.containerType = type;
+                                                                        if (type == &quot;Spinepuck&quot;) {
+                                                                            c.capacity = 10;
+                                                                        } else if (type == &quot;Unipuck&quot;) {
+                                                                            c.capacity = 16;
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }
+                    );
+                }
+                _this.load(processingContainers,sampleChangerWidget);
+                _this.panel.setLoading(false);
+                _this.onLoaded.notify(processingContainers);
+            }
+            EXI.getDataAdapter({onSuccess : onSampleSuccess}).mx.sample.getSamplesByContainerId(_.map(containersFromISPyB,&quot;containerId&quot;));
+        } else {
+            _this.load(processingContainers,sampleChangerWidget);
+            _this.panel.setLoading(false);
+            _this.onLoaded.notify(processingContainers);
+        }
     };
     var onError = function(sender, error) {        
         EXI.setError(&quot;Ops, there was an error&quot;);
@@ -318,36 +444,65 @@ ContainerPrepareSpreadSheet.prototype.loadProcessingDewars = function (sampleCha
 * @param dewars
 * @return
 */
-ContainerPrepareSpreadSheet.prototype.load = function(dewars, sampleChangerWidget) {
-    this.dewars = dewars;
+ContainerPrepareSpreadSheet.prototype.load = function(containers, sampleChangerWidget) {
+    var _this = this;
+    this.containers = containers;
     if (sampleChangerWidget){
         this.sampleChangerWidget = sampleChangerWidget;
     }
     var data = [];
-    //Parse data
-    for (dewar in dewars) {
-        if (dewars[dewar].sampleCount &gt; 0){
-            var containerType = &quot;Unipuck&quot;;
-            if (dewars[dewar].capacity){
-                if (dewars[dewar].capacity == 10) {
-                    containerType = &quot;Spinepuck&quot;;
-                }
+    var error = false;
+    
+    
+    for (var i = 0 ; i &lt; containers.length ; i++) {
+        var container = containers[i];
+        if (container.containerId){
+            var containerType = container.containerType;
+            if (containerType == &quot;Puck&quot;) {
+                containerType = &quot;Spinepuck&quot;;
+                container.capacity = 10;
             }
+
             data.push({
-                shippingName : dewars[dewar].shippingName,
-                barCode : dewars[dewar].barCode,
-                containerCode : dewars[dewar].containerCode,
+                shippingName : container.shippingName,
+                shippingId : container.shippingId,
+                parcelName : container.dewarCode,
+                barCode : container.barCode,
+                containerCode : container.containerCode,
                 containerType : containerType,
-                sampleCount : dewars[dewar].sampleCount,
-                beamlineName : dewars[dewar].beamlineName,
-                sampleChangerLocation : dewars[dewar].sampleChangerLocation,
-                dewarId : dewars[dewar].dewarId,
-                containerId : dewars[dewar].containerId,
-                capacity : dewars[dewar].capacity
+                sampleCount : container.sampleCount,
+                beamlineName : container.beamlineLocation,
+                sampleChangerLocation : container.sampleChangerLocation,
+                dewarId : container.dewarId,
+                containerId : container.containerId,
+                capacity : container.capacity
             });
+        } 
+        /*else {
+            error = true;
+        }*/
+    }
+
+    if (error){
+        $.notify(&quot;Error: error loading the containers&quot;, &quot;error&quot;);
+    }
+
+    this.store.loadData(data);
+    //Define listener for beamline combobox
+    $(&#039;.beamlines-select&#039;).change(function(sender) {
+        var beamline = $(&quot;#&quot; + _this.id + &quot;-&quot; + sender.target.value + &quot; option:selected&quot;).text();
+        var containerId = sender.target.value;
+        _this.updateBeamlineName(containerId,beamline);
+        _this.onBeamlineChanged.notify(beamline);
+    });
+    //Check if any row should be selected
+    if (this.preselectedRowContainerId) {
+        var row = _.filter(this.panel.getStore().data.items,function (o) {return o.data.containerId == parseInt(_this.preselectedRowContainerId);});
+        if (row &amp;&amp; row.length &gt; 0) {
+            this.onSelectRow.notify({record : row[0]});
+            this.preselectedRowContainerId = null;
         }
     }
-    this.store.loadData(data);
 };
 
 /**
@@ -360,33 +515,49 @@ ContainerPrepareSpreadSheet.prototype.load = function(dewars, sampleChangerWidge
 */
 ContainerPrepareSpreadSheet.prototype.updateSampleChangerLocation = function (containerId, location) {
     var _this = this;
-
-    var recordsByContainerId = _.filter(_this.panel.store.data.items,function(o) {return o.data.containerId == containerId});
+    var recordsByContainerId = this.getRowsByContainerId(containerId);
 
     for (var i = 0 ; i &lt; recordsByContainerId.length ; i++) {
         var record = recordsByContainerId[i];
         if (record.get(&#039;containerId&#039;) == containerId) {
             var beamlineName = record.get(&#039;beamlineName&#039;);
+            if (beamlineName) {
+                var onSuccess = function(sender, containers) {
+                    _this.loadProcessingDewars();
+                };
+                var onError = function(sender, error) {        
+                    EXI.setError(&quot;Ops, there was an error&quot;);
+                };
 
-            var onSuccess = function(sender, containers) {
-                _this.loadProcessingDewars();
-            };
-            var onError = function(sender, error) {        
-                EXI.setError(&quot;Ops, there was an error&quot;);
-            };
-
-            EXI.getDataAdapter({onSuccess : onSuccess, onError:onError}).proposal.dewar.updateSampleLocation([containerId], [beamlineName], [location]);
+                EXI.getDataAdapter({onSuccess : onSuccess, onError:onError}).proposal.dewar.updateSampleLocation([containerId], [beamlineName], [location]);
+            } else {
+                $.notify(&quot;The beamline is not defined&quot;, &quot;error&quot;);
+            }
             return
         }
     }
 };
 
+ContainerPrepareSpreadSheet.prototype.updateBeamlineName = function (containerId, beamline) {
+    var _this = this;
+
+    var onSuccess = function(sender, containers) {
+        _this.preselectedRowContainerId = containerId
+        _this.loadProcessingDewars();
+    };
+    var onError = function(sender, error) {        
+        EXI.setError(&quot;Ops, there was an error&quot;);
+    };
+
+    EXI.getDataAdapter({onSuccess : onSuccess, onError:onError}).proposal.dewar.updateSampleLocation([containerId], [beamline], [&quot;&quot;]);
+};
+
 /**
 * Returns the row with the given containerId
 *
-* @method getRowByContainerId
+* @method getRowsByContainerId
 * @param {Integer} containerId The container Id of the record to be returned
-* @return The row with the given containerId
+* @return The rows with the given containerId
 */
 ContainerPrepareSpreadSheet.prototype.getRowsByContainerId = function (containerId) {
     var recordsByContainerId = _.filter(this.panel.store.data.items,function(o) {return o.data.containerId == containerId});

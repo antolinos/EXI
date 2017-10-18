@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">118.03</p>
+      <p class="stat">115.79</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">57</p>
+      <p class="stat">99</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">15.95</p>
+      <p class="stat">24.15</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.45</p>
+      <p class="stat">0.86</p>
     </div>
   </div>
 </div>
@@ -92,7 +92,7 @@
     <textarea id="file-source" class="col-md-12">/**
 * This main class deals with the creation and edition of shipments
 *
-* @class ShippingMainView
+* @class ShippingMainViewTest
 * @constructor
 */
 function ShippingMainView() {
@@ -105,8 +105,15 @@ function ShippingMainView() {
 	*/
     this.shipmentForm = new ShipmentForm({width : Ext.getBody().getWidth() - 200});
 	this.shipmentForm.onSaved.attach(function(sender, shipment){
-		location.hash = &quot;#/proposal/shipping/nav?nomain&quot;;
+		// location.hash = &quot;#/proposal/shipping/nav?nomain&quot;;
+		location.hash = &quot;#/shipping/&quot; + shipment.shippingId + &quot;/main&quot;;
 	});
+
+	
+	this.shipmentForm.refresh.attach(function(sender, shipmentId){		
+		_this.load(shipmentId);
+	});
+
 
     /**
 	* 
@@ -116,41 +123,76 @@ function ShippingMainView() {
 	
 }
 
-ShippingMainView.prototype.getPanel = function() {
-	
-    this.panel =  Ext.create(&#039;Ext.panel.Panel&#039;, {
-        layout: {
-            type: &#039;vbox&#039;,
-            align: &#039;center&#039;
-        },
-        cls : &#039;border-grid&#039;,
-        items : [
-                    this.shipmentForm.getPanel(),
-                    this.parcelGrid.getPanel()
+ShippingMainView.prototype.getPanel = MainView.prototype.getPanel;
+
+ShippingMainView.prototype.getContainer = function() {
+	return Ext.create(&#039;Ext.container.Container&#039;, {
+	    layout: {
+	        type: &#039;fit&#039;
+	    },
+	    margin : 15,
+	    border: 1,
+	    defaults: {
+	        labelWidth: 80,
+	        flex: 1,
+	    },
+	    items : [
+                    this.getShipmentPanel()
         ]
 	});
-
-    return this.panel;
 };
+
+ShippingMainView.prototype.getShipmentPanel = function() {
+	var _this = this;
+
+	return Ext.create(&quot;Ext.panel.Panel&quot;,{	
+		items :	[
+					this.shipmentForm.getPanel(),
+                    this.parcelGrid.getPanel()
+			]
+	});
+};
+
+
 
 
 ShippingMainView.prototype.load = function(shippingId) {
 	var _this = this;
 	this.shippingId = shippingId;
-	
-	if (shippingId == null){
-		Ext.getCmp(this.id + &quot;grid&quot;).disable(true);
-	}
 	this.panel.setTitle(&quot;Shipment&quot;);
 	if (shippingId != null){
 		this.panel.setLoading();
 		var onSuccess = function(sender, shipment){
-			_this.shipmentForm.load(shipment);
-			_this.parcelGrid.load(shipment);
-			_this.panel.setLoading(false);
+			//Check if samples have exported data in order to know if the remove button should be enabled
+
+			var containerIds = _.map(_.union(_.flatten(_.map(shipment.dewarVOs,&quot;containerVOs&quot;))),&quot;containerId&quot;);
+			if (containerIds.length &gt; 0) {
+				var onSuccessSamples = function(sender,samples) {
+					var hasExportedData = false;
+					if (samples) {
+						var withoutCollection = _.filter(samples,{DataCollectionGroup_dataCollectionGroupId : null});
+						hasExportedData = !(withoutCollection.length == samples.length);
+					}
+
+					_this.shipmentForm.load(shipment,hasExportedData);
+					_this.parcelGrid.load(shipment,hasExportedData,samples,withoutCollection);
+					_this.panel.setLoading(false);
+
+				}
+				EXI.getDataAdapter({onSuccess : onSuccessSamples}).mx.sample.getSamplesByContainerId(containerIds);
+			} else {
+				_this.shipmentForm.load(shipment,false);
+				_this.parcelGrid.load(shipment,false);
+				_this.panel.setLoading(false);
+			}
+
 		};
 		EXI.getDataAdapter({onSuccess : onSuccess}).proposal.shipping.getShipment(shippingId);
-	}
+    }	
+    else{
+        _this.shipmentForm.load();	
+		_this.panel.setLoading(false);
+    }
 };</textarea>
   </div>
 </div>

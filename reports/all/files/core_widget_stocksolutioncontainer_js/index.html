@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - core/widget/stocksolutioncontainer.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>core/widget/stocksolutioncontainer.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">107.19</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">170</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">35.58</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.83</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">function StockSolutionContainer(args) {
+    this.id = BUI.id();
+	
+    this.templateData = {
+                            id          	: this.id,
+                            xmargin     	: 0,
+                            ymargin     	: 0,
+                            mainRadius  	: 50,
+                            width       	: 100,
+                            height      	: 100,
+							margin			: 15,
+							stockId			: 0,
+							enableMainClick : false,
+							enableClick : false,
+                            code            : &quot;&quot;,
+							minimized : false
+                        };
+
+	this.stockSolutionId = 0;
+    this.samples = null;
+	this.code = &quot;&quot;;
+
+	if (args){
+		if (args.code){
+			this.code = args.code;
+		}
+		if (args.xMargin){
+			this.templateData.xMargin = args.xMargin;
+		}
+		if (args.yMargin){
+			this.templateData.yMargin = args.yMargin;
+		}
+		if (args.enableMainClick != null){
+			this.templateData.enableMainClick = args.enableMainClick;
+		}
+		if (args.enableClick != null){
+			this.templateData.enableClick = args.enableClick;
+		}
+        if (args.mainRadius){
+			this.templateData.mainRadius = args.mainRadius;
+			this.templateData.width = 2*args.mainRadius;
+			this.templateData.height = 2*args.mainRadius;
+			this.templateData.margin = (this.templateData.width - this.templateData.imgW)*0.5;
+		}
+        if (args.code) {
+            this.templateData.code = args.code;
+        }
+        if (args.stockSolutionId) {
+            this.stockSolutionId = args.stockSolutionId;
+            var stockSolution = EXI.proposalManager.getStockSolutionById(this.stockSolutionId);
+            this.templateData.macromoleculeAcronym = EXI.proposalManager.getMacromoleculeById(stockSolution.macromoleculeId).acronym;
+            this.templateData.buffer = EXI.proposalManager.getBufferById(stockSolution.bufferId).acronym;
+            this.templateData.stockId = this.stockSolutionId;
+        }
+	}
+
+	if (this.templateData.height &lt; 45) {
+        this.templateData.minimized = true;
+    }
+
+	this.onClick = new Event(this);
+	this.onMouseOver = new Event(this);
+	this.onMouseOut = new Event(this);
+};
+
+StockSolutionContainer.prototype.getPanel = function () {
+	
+	var _this = this;
+
+	var cls = (this.templateData.minimized) ? &quot;border-grid&quot; : &quot;&quot;;
+	
+	this.panel =  Ext.create(&#039;Ext.panel.Panel&#039;, {
+            id: this.id + &quot;-container&quot;,
+		    x: this.templateData.xMargin,
+		    y: this.templateData.yMargin,
+		    width : this.templateData.width + 1,
+		    height : this.templateData.height + 1,
+			cls : cls,
+		    frame: false,
+			border: false,
+			bodyStyle: &#039;background:transparent;&#039;,
+		    
+            items : [
+						{
+							html : this.getHTML(),
+							width : this.templateData.width + 1,
+							height : this.templateData.height + 1
+						}
+			],
+			
+	});
+
+	this.panel.on(&#039;boxready&#039;, function() {
+        if(_this.templateData.enableMainClick) {
+			$(&quot;#&quot; + _this.id).unbind(&#039;click&#039;).click(function(sender){
+				_this.onClick.notify(sender.target.id);
+			});
+		}
+		_this.setOnMouseOverEvent();
+    });
+	
+	return this.panel;
+	
+};
+
+StockSolutionContainer.prototype.loadSamples = function (samples) {
+    this.samples = samples;
+    if (samples){
+		if (samples.length &gt; 0){
+			this.containerId = samples[0].Container_containerId; 
+		}
+	}
+};
+
+StockSolutionContainer.prototype.getHTML = function (samples) {
+	var html = &quot;&quot;;
+	if (this.templateData.height &lt; 40) {
+		this.templateData.fillPanel = false;
+	} else {
+		this.templateData.fillPanel = true;
+	}
+	dust.render(&quot;stock.solution.container.template&quot;, this.templateData, function(err, out){
+		html = out;
+	});
+	
+	return html;
+};
+
+StockSolutionContainer.prototype.setOnMouseOverEvent = function () {
+	var _this = this;
+	
+	$(&quot;#&quot; + this.id).unbind(&#039;mouseover&#039;).mouseover(function(sender){
+		_this.onMouseOver.notify(_this);
+		if (_this.templateData.height &lt; 40){
+			var id = sender.currentTarget.id;
+			$(&quot;#&quot; + id).addClass(&quot;stock-solution-focus&quot;);
+			
+			// TOOLTIP
+			var tooltipHtml = &quot;&quot;;
+			dust.render(&quot;stock.solution.tooltip.template&quot;, _this.templateData, function(err, out) {
+				tooltipHtml = out;
+			});
+			$(&#039;body&#039;).append(tooltipHtml);
+			$(&#039;#hoveringTooltipDiv-&#039; + _this.stockSolutionId).css({
+				&quot;top&quot; : $(this).offset().top,
+				&quot;left&quot; : $(this).offset().left + _this.templateData.width
+			});
+		}
+	});
+	
+	$(&quot;#&quot; + this.id).unbind(&#039;mouseout&#039;).mouseout(function(sender){
+		_this.onMouseOut.notify(_this);
+		if (_this.templateData.height &lt; 40){
+			var stockId = sender.currentTarget.id;
+			$(&quot;#&quot; + stockId).removeClass(&quot;stock-solution-focus&quot;);
+
+			// TOOLTIP
+			$(&#039;#hoveringTooltipDiv-&#039; + _this.stockSolutionId).remove();
+		}
+	});
+
+}
+
+StockSolutionContainer.prototype.focus = function (bool) {
+	if (bool){
+		$(&quot;#&quot; + this.id + &quot;-container&quot;).addClass(&quot;stock-solution-selected&quot;);		
+	} else {
+		$(&quot;#&quot; + this.id + &quot;-container&quot;).removeClass(&quot;stock-solution-selected&quot;);	
+	}
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

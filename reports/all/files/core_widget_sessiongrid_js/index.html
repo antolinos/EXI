@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">104.84</p>
+      <p class="stat">106.80</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">324</p>
+      <p class="stat">425</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">35.97</p>
+      <p class="stat">42.22</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">3.26</p>
+      <p class="stat">4.71</p>
     </div>
   </div>
 </div>
@@ -110,6 +110,8 @@
     
     /** Array with the beamline selected to make the filter */
     this.beamlineFilter = [];
+    // Term filter value
+    this.termFilter = &quot;&quot;;
     
 	if (args != null) {
          if (args.isHiddenLocalContact != null) {
@@ -154,26 +156,36 @@
 		}
 	}
 	this.onSelected = new Event(this);
-}
-
-
-
-SessionGrid.prototype.load = function(sessions) {
-    this.sessions = sessions;
-	this.store.loadData(sessions, false);
 };
 
-SessionGrid.prototype.filterByBeamline = function(beamlines) {
+SessionGrid.prototype.load = function(sessions) {    
+    var _this = this;
+    /** Filtering session by the beamlines of the configuration file */    
+    this.sessions = _.filter(sessions, function(o){ return _.includes(EXI.credentialManager.getBeamlineNames(), o.beamLineName); });
+	this.store.loadData(this.sessions, false);
+    // Attach listener to edit the session comments
+    var attachListeners = function(grid) {
+        $(&quot;span.session-comment-edit&quot;).click(function(sender){
+            var sessionId = sender.target.id.split(&quot;-&quot;)[0];
+            _this.editComments(sessionId);
+        });
+    };
+    
+    var timer = setTimeout(attachListeners, 500, _this);
+};
+
+SessionGrid.prototype.filterByBeamline = function(sessions, beamlines) {
+    console.log(beamlines);
     if (beamlines){
         if (beamlines.length &gt; 0){
             var filtered = [];
             for(var i = 0; i &lt; beamlines.length; i++){
-                filtered = _.concat(filtered, (_.filter(this.sessions, {&#039;beamLineName&#039;: beamlines[i]})));
+                filtered = _.concat(filtered, (_.filter(sessions, {&#039;beamLineName&#039;: beamlines[i]})));
             }
-            this.store.loadData(filtered, false);
+            return filtered;
         }
         else{
-            this.store.loadData(this.sessions, false);
+            return sessions;
         }
     }
 };
@@ -186,13 +198,20 @@ SessionGrid.prototype.getToolbar = function(sessions) {
                     if (selected){
                         _this.beamlineFilter.push(a.boxLabel);
                     }
-                    else{                        
-                        _this.beamlineFilter =_.remove(_this.beamlineFilter,a.boxLabel );
+                    else{               
+                        _this.beamlineFilter =_.remove(_this.beamlineFilter, function(n) {                            
+                                return n  != a.boxLabel;
+                        });
                     }
-                    _this.filterByBeamline(_this.beamlineFilter);
+
+                    var filtered = _this.filterByBeamline(_this.sessions,_this.beamlineFilter);
+                    if (_this.termFilter != &quot;&quot;){
+                        filtered = _this.filterByTerm(filtered,_this.termFilter);
+                    }
+                    _this.store.loadData(filtered,false);
+                    _this.panel.setTitle(filtered.length + &quot; sessions&quot;);
     };
 
-        
     for (var i =0; i&lt;EXI.credentialManager.getBeamlines().length; i++){
         items.push({           
                 xtype: &#039;checkbox&#039;,
@@ -202,21 +221,81 @@ SessionGrid.prototype.getToolbar = function(sessions) {
             
         });
     }
-	 return Ext.create(&#039;Ext.toolbar.Toolbar&#039;, {  
+
+    items.push(&quot;-&gt;&quot;,
+                {
+                    xtype    : &#039;textfield&#039;,
+                    name     : &#039;proposalFilter&#039;,
+                    width    : 300,
+                    emptyText: &#039;Filter by term (proposal or title) or comment&#039;,
+                    listeners : {
+                        specialkey : function(field, e) {
+                            if (e.getKey() == e.ENTER) {
+                                _this.termFilter = field.getValue();
+                                var filtered = _this.filterByTerm(_this.sessions, _this.termFilter);
+                                if (_this.beamlineFilter.length &gt; 0) {
+                                    filtered = _this.filterByBeamline(filtered,_this.beamlineFilter);
+                                }
+                                _this.store.loadData(filtered,false);
+                                _this.panel.setTitle(filtered.length + &quot; sessions&quot;);
+                            }
+                        } 
+                    } 
+                }
+    );
+
+    return Ext.create(&#039;Ext.toolbar.Toolbar&#039;, {  
         items: items
     });
 };
 
+SessionGrid.prototype.filterByTerm = function (sessions,term) {
+    if (term == &quot;&quot;){
+        return sessions;
+    } else {
+        var result = [];
+        for (var i = 0 ; i &lt; sessions.length ; i++){
+            var proposalId = sessions[i][&quot;Proposal_proposalCode&quot;] +  sessions[i][&quot;Proposal_ProposalNumber&quot;];
+            var title = sessions[i][&quot;Proposal_title&quot;];
+            var comments = sessions[i].comments;
+            if (title == null){
+                title = &quot;&quot;;
+            }
+            if (comments == null){
+                comments = &quot;&quot;;
+            }
+            if ((comments.toUpperCase().match(term.toUpperCase())) || (proposalId.toUpperCase().match(term.toUpperCase())) ||(title.toUpperCase().match(term.toUpperCase()))){
+                result.push(sessions[i]);
+            }
+        }
+        return result;
+    }
+}
 
 SessionGrid.prototype.getPanel = function() {
 	var _this = this;
+
+    var labContacts = EXI.proposalManager.getLabcontacts();
+    
+    var dataCollectionHeader = &quot;Session synopsis&quot;;
+    var technique = null;
+    var beamlines = EXI.credentialManager.getBeamlineNames();
+    if (beamlines.length &gt; 0) {
+        technique = EXI.credentialManager.getTechniqueByBeamline(beamlines[0]);
+    }
+    if (technique){
+        dust.render(&quot;session.grid.&quot; + technique.toLowerCase() + &quot;.datacollection.header.template&quot;,[],function(err,out){
+            dataCollectionHeader = out;
+        });
+    } else {
+        techniche = &quot;MX&quot;;
+    }
    
     this.store = Ext.create(&#039;Ext.data.Store&#039;, {
 		fields : [&#039;Proposal_ProposalNumber&#039;, &#039;beamLineName&#039;, &#039;beamLineOperator&#039;, &#039;Proposal_title&#039;, &#039;Person_emailAddress&#039;, &#039;Person_familyName&#039;, &#039;Person_givenName&#039;, &#039;nbShifts&#039;, &#039;comments&#039;],
 		emptyText : &quot;No sessions&quot;,
 		data : []
 	});    
-
 
 	this.panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
 		title : this.title,
@@ -252,7 +331,7 @@ SessionGrid.prototype.getPanel = function() {
               {
                             text              : &#039;Start&#039;,
                             dataIndex         : &#039;BLSession_startDate&#039;,
-                            flex              : 2,
+                            flex              : 1,
                             hidden            : false,
                             renderer          : function(grid, a, record){                                 
                                                      
@@ -264,7 +343,7 @@ SessionGrid.prototype.getPanel = function() {
                                                         location = &quot;#/mx/datacollection/session/&quot; + record.data.sessionId + &quot;/main&quot;;
                                                     }
                                                     if (record.data.BLSession_startDate){                 
-                                                         return &quot;&lt;a href=&#039;&quot; +  location +&quot;&#039;&gt;&quot; + moment(record.data.BLSession_startDate, &#039;MMMM Do YYYY, h:mm:ss a&#039;).format(&#039;MMMM Do YYYY&#039;) + &quot;&lt;/a&gt;&quot;; 
+                                                         return &quot;&lt;a href=&#039;&quot; +  location +&quot;&#039;&gt;&quot; + moment(record.data.BLSession_startDate, &#039;MMMM Do YYYY, h:mm:ss a&#039;).format(&#039;DD-MM-YYYY&#039;) + &quot;&lt;/a&gt;&quot;; 
                                                     }
                             }
 		     },
@@ -298,7 +377,7 @@ SessionGrid.prototype.getPanel = function() {
 			    text                : &#039;Shifts&#039;,
 			    dataIndex           : &#039;nbShifts&#039;,
                 hidden              : this.isHiddenNumberOfShifts,
-                flex                : 1
+                flex                : 0.5
 		    },
            {
 			    text                : &#039;Local Contact&#039;,
@@ -320,8 +399,19 @@ SessionGrid.prototype.getPanel = function() {
 			    width               : 200,
               
                  hidden              : this.isHiddenPI,
-                renderer : function(grid, a, record){                        
-                        return record.data.Person_familyName + &quot;, &quot; + record.data.Person_givenName;
+                renderer : function(grid, a, record){
+                        var labContactsFiltered = _.filter(labContacts,function (l) {return l.personVO.personId == record.data.Person_personId;});
+                        var piInformation = &quot;&quot;;
+                        if (record.data.Person_givenName) {                       
+                            piInformation = record.data.Person_familyName + &quot;, &quot; + record.data.Person_givenName;
+                        } else {
+                            piInformation = record.data.Person_familyName
+                        }
+                        if (labContactsFiltered.length &gt; 0){
+                            href = &quot;#/proposal/address/&quot; + labContactsFiltered[0].labContactId + &quot;/main&quot;;
+                            piInformation = &#039;&lt;a href=&#039; + href + &#039;&gt;&#039; + piInformation + &#039;&lt;/a&gt;&#039;;
+                        }
+                        return piInformation;
                     }
 		    },
              {
@@ -332,31 +422,15 @@ SessionGrid.prototype.getPanel = function() {
                 flex               : 1
 		    },
            {
-                text                : &#039;Data Collections&#039;,
+                text                : dataCollectionHeader,
 			    dataIndex           : &#039;Person_emailAddress&#039;,
-                 width               : 200,
-                renderer : function(grid, a, record){ 
-                    function getBadge(title, count) {
-                        if (count){
-                            if (count != 0){
-                                return &#039;&lt;tr&gt;&lt;td&gt;&lt;span style=&quot;margin-left:10px;margin-top:2px;background-color:#207a7a;&quot; class=&quot;badge&quot;&gt;&#039; + count +&#039;&lt;/span&gt;&lt;/td&gt;&lt;td style=&quot;padding-left:10px;&quot;&gt;&#039; + title + &#039;&lt;/td&gt;&lt;/tr&gt;&#039;;
-                            }
-                        }
-                        return &quot;&quot;;
-                    }
-                    function getTable(record){
-                        var html = &quot;&lt;table&gt;&quot;;
-                        html =   html = html + getBadge(&quot;Energy&quot;, record.data.energyScanCount);
-                        html = html + getBadge(&quot;XRF&quot;, record.data.xrfSpectrumCount);
-                        html = html + getBadge(&quot;Samples&quot;, record.data.sampleCount);
-                        html = html + getBadge(&quot;Test&quot;, record.data.testDataCollectionGroupCount);
-                        html = html + getBadge(&quot;Collects&quot;, record.data.dataCollectionGroupCount);
-                        html = html + getBadge(&quot;Calibration&quot;, record.data.calibrationCount);
-                        html = html + getBadge(&quot;Sample Changer&quot;, record.data.sampleChangerCount);
-                        html = html + getBadge(&quot;HPLC&quot;, record.data.hplcCount);
-                        return html + &quot;&lt;/table&gt;&quot;;  
-                    }                                                          
-                    return getTable(record);
+                 flex               : 3,
+                renderer : function(grid, a, record){                    
+                    var html = &quot;&quot;;
+                    dust.render(&quot;session.grid.&quot; + technique.toLowerCase() + &quot;.datacollection.values.template&quot;,record.data,function(err,out){
+                        html = out;
+                    });                                                   
+                    return html;
                  }
                
            },
@@ -370,20 +444,32 @@ SessionGrid.prototype.getPanel = function() {
                                         return record.data.BLSession_endDate;
                 }
 		   },
+
+           
+
+            {
+			    text                : &#039;A-form&#039;,
+			    dataIndex           : &#039;comments&#039;,
+                hidden              : false,
+                flex                : 0.5,
+                renderer            : function(grid, a, record){    
+                                        if (record.data.expSessionPk){
+                                            return &#039;&lt;a  target=&quot;_blank&quot; href=&quot;https://wwws.esrf.fr/misapps/SMISWebClient/protected/aform/manageAForm.do?action=view&amp;currentTab=howtoTab&amp;expSessionVO.pk=&#039;+ record.data.expSessionPk +&#039;&quot; class=&quot;btn btn-xs&quot;&gt;&lt;span class=&quot;glyphicon glyphicon-list-alt&quot;&gt;&lt;/span&gt;&lt;/a&gt;&#039;;
+                                        }
+                }
+		    },
            {
 			    text                : &#039;Comments&#039;,
 			    dataIndex           : &#039;comments&#039;,
                 hidden              : false,
-                flex                : 3,
+                flex                : 2,
                 renderer            : function(grid, a, record){    
-                                        if (record.data.comments){                
-                                            return &quot;&lt;div style=&#039;width:50px; wordWrap: break-word;&#039;&gt;&quot; + record.data.comments + &quot;&lt;/div&gt;&quot;;
+                                        if (!record.data.comments){
+                                           record.data.comments = &quot;&quot;;
                                         }
+                                        return &#039;&lt;div style=&quot;width:50px; wordWrap: break-word;&quot;&gt;&lt;a class=&quot;btn btn-xs&quot;&gt;&lt;span id=&quot;&#039; + record.data.sessionId + &#039;-edit-comments&quot; class=&quot;glyphicon glyphicon-edit session-comment-edit&quot;&gt;&lt;/span&gt;&lt;/a&gt;&lt;span id=&quot;comments_&#039; + record.data.sessionId + &#039;&quot;&gt; &#039; + record.data.comments + &#039;&lt;/span&gt;&lt;/div&gt;&#039;;
                 }
-                
-
-
-		    },
+		    }
            ], 
       	   viewConfig : {
                 stripeRows : true,
@@ -406,12 +492,27 @@ SessionGrid.prototype.getPanel = function() {
 					_this.onSelected.notify({
                        proposalCode   : record.data.Proposal_proposalCode,
                        proposalNumber : record.data.Proposal_ProposalNumber
-                        
                     });
 				}			
 			}				
-	});	
+	});
+
 	return this.panel;
+};
+
+/**
+* Opens a modal to edit a comment
+* @method editComments
+* @param Integer id The id
+*/
+SessionGrid.prototype.editComments = function (id) {
+    var comment = $(&quot;#comments_&quot; + id).html().trim();
+    var commentEditForm = new CommentEditForm({mode : &quot;SESSION&quot;});
+    commentEditForm.onSave.attach(function(sender,comment) {
+        $(&quot;#comments_&quot; + id).html(comment);
+    });
+    commentEditForm.load(id,comment);
+    commentEditForm.show();
 };</textarea>
   </div>
 </div>

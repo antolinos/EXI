@@ -56,6 +56,8 @@ DataCollectionGrid.prototype.getPanel = function (dataCollectionGroup) {
     });
 
     return this.panel;
+    
+  
 };
 
 

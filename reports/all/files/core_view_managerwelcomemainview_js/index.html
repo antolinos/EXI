@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">120.38</p>
+      <p class="stat">119.86</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">272</p>
+      <p class="stat">331</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">37.12</p>
+      <p class="stat">40.74</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.76</p>
+      <p class="stat">3.28</p>
     </div>
   </div>
 </div>
@@ -131,21 +131,23 @@ ManagerWelcomeMainView.prototype.getPanel = MainView.prototype.getPanel;
 */
 ManagerWelcomeMainView.prototype.activeProposal = function(proposal) {
     
-    EXI.mainStatusBar.showBusy(&quot;Loading proposal &quot; +proposal); 
+    //EXI.mainStatusBar.showBusy(&quot;Loading proposal &quot; +proposal); 
     
 	EXI.credentialManager.setActiveProposal(this.username, proposal);
     EXI.proposalManager.clear();
 	/** I don&#039;t need this to be synchronous **/	
-    EXI.proposalManager.onActiveProposalChanged = new Event();
+    /*EXI.proposalManager.onActiveProposalChanged = new Event();
     EXI.proposalManager.onActiveProposalChanged.attach(function(){
         EXI.mainStatusBar.showReady();
-        console.log(EXI.proposalManager.get());
+        
     });
-	EXI.proposalManager.get();
+    
+	EXI.proposalManager.get();*/
 };
 
 
 ManagerWelcomeMainView.prototype.getContainer = function() {
+    var _this = this;
 	this.container = Ext.create(&#039;Ext.panel.Panel&#039;, {
 		autoScroll : true,
         margin : 20,
@@ -155,6 +157,7 @@ ManagerWelcomeMainView.prototype.getContainer = function() {
                 this.sessionGrid.getPanel()
         ]
 	});
+
 	return this.container;
 };
 
@@ -172,7 +175,7 @@ ManagerWelcomeMainView.prototype.displayProposals = function(proposals) {
             _this.panel.setLoading(true);
             var proposalCode = proposal.Proposal_proposalCode + proposal.Proposal_proposalNumber;
             function onSuccess(sender, sessions){
-                _this.displaySessions(sessions, sessions.length + &quot; sessions for proposal &quot; + proposalCode);
+                _this.displaySessions(sessions,&quot; sessions for proposal &quot; + proposalCode);
                 _this.panel.setLoading(false);
             }
             EXI.getDataAdapter({onSuccess:onSuccess}).proposal.session.getSessionsByProposal(proposalCode);
@@ -186,6 +189,28 @@ ManagerWelcomeMainView.prototype.displayProposals = function(proposals) {
     this.proposalGrid.load(proposals);
 };
 
+
+/**
+* It receives a local contact name and will load in the sessionGrid
+*
+* @param {String} beamlineOperator name or surname of the beamline operator
+* @method displaySessionsByBeamlineOperator
+*/
+ManagerWelcomeMainView.prototype.displaySessionsByBeamlineOperator = function(beamlineOperator) {
+    var _this = this;
+    _this.panel.setLoading(true);
+    var onSuccess = function(sender, sessions){
+       _this.displaySessions(sessions,&quot; sessions are scheduled for local contact: &quot; + beamlineOperator);
+       _this.panel.setLoading(false);
+    }
+    
+    var onError = function(sender, sessions){  
+        _this.sessionGrid.panel.setTitle(&quot;No sessions are scheduled for local contact: &quot; + beamlineOperator);             
+       _this.panel.setLoading(false);
+    }
+    EXI.getDataAdapter({onSuccess : onSuccess, onError:onError}).proposal.session.getSessionsByBeamlineOperator(beamlineOperator);
+};
+
 /**
 * Retrieves a list of sessions based on a start date and end date and loads them on the session grid
 *
@@ -195,9 +220,13 @@ ManagerWelcomeMainView.prototype.displayProposals = function(proposals) {
 */
 ManagerWelcomeMainView.prototype.loadByDate = function(username, start, end) {
           var _this = this;
+          var title = &quot; sessions scheduled on &quot; + moment(start, &#039;YYYYMMDD&#039;).format(&#039;MMMM Do YYYY&#039;);
+          if (start != end) {
+              title = &quot; sessions scheduled from &quot; + moment(start, &#039;YYYYMMDD&#039;).format(&#039;DD-MM-YYYY&#039;) + &quot; to &quot; + moment(end, &#039;YYYYMMDD&#039;).format(&#039;DD-MM-YYYY&#039;);
+          }
           this.panel.setLoading(true);
           function onSuccess(sender, data){              
-        	  _this.displaySessions(data, data.length + &quot; sessions scheduled on &quot; + moment(start, &#039;YYYYMMDD&#039;).format(&#039;MMMM Do YYYY&#039;));
+        	  _this.displaySessions(data, title);
         	  _this.panel.setLoading(false);
           }
           /** Increasing one day */
@@ -241,8 +270,7 @@ ManagerWelcomeMainView.prototype.displaySessions = function(sessions, title) {
         _this.activeProposal(args.proposalCode + args.proposalNumber);
     });
     
-    this.sessionGrid.load(this.filterSessions(sessions));
-    this.sessionGrid.panel.setTitle(title);
+    this.sessionGrid.load(this.filterSessions(sessions),title);
 };
 
 ManagerWelcomeMainView.prototype.getToolbar = function() {
@@ -263,8 +291,21 @@ ManagerWelcomeMainView.prototype.getToolbar = function() {
                menu: dateMenu 
             },
             {
+                xtype: &#039;button&#039;,
+                icon : &#039;../images/icon/sessions.png&#039;,
+                text: &#039;Choose a period of time&#039;,
+                handler: function () {
+                    var dateRangePicker = new DateRangePicker();
+                    dateRangePicker.onSelected.attach(function(sender,dates){
+                        location.href = &quot;#/welcome/manager/&quot; + _this.username +&quot;/date/&quot;+ moment(dates.startDate,&#039;DD-MM-YYYY&#039;).format(&quot;YYYYMMDD&quot;) +&quot;/&quot; + moment(dates.endDate,&#039;DD-MM-YYYY&#039;).format(&quot;YYYYMMDD&quot;) +&quot;/main&quot;;          
+                    })
+                    dateRangePicker.show();
+                }
+            },
+            {
                 xtype    : &#039;textfield&#039;,
                 name     : &#039;field1&#039;,
+                hidden   : !EXI.credentialManager.getCredentials()[0].isManager(),
                 width    : 300,
                 emptyText: &#039;enter search term (proposal or title)&#039;,
     			listeners : {
@@ -275,7 +316,25 @@ ManagerWelcomeMainView.prototype.getToolbar = function() {
     					}
     				} 
     			} 
-            }
+            },
+            &#039;-&gt;&#039;,
+            {             
+               icon     : &#039;../images/icon/person.png&#039;,
+               border : 0
+            },
+             {
+                xtype    : &#039;textfield&#039;,
+                name     : &#039;field1&#039;,
+                width    : 300,               
+                emptyText: &#039;search by local contact&#039;,
+    			listeners : {
+    				specialkey : function(field, e) {
+    					if (e.getKey() == e.ENTER) {    						
+    						_this.displaySessionsByBeamlineOperator(field.getValue());
+    					}
+    				} 
+    			} 
+            },
         ]
     });
 };
@@ -343,7 +402,7 @@ ManagerWelcomeMainView.prototype.loadSessionsByProposal = function(username) {
     var _this = this;
     this.panel.setLoading(true);
     function onSuccess(sender, data){
-       _this.displaySessions(data, &quot;Sessions for proposal &quot; + username);
+       _this.displaySessions(data, &quot; sessions for proposal &quot; + username);
        _this.panel.setLoading(false);
     }
     EXI.getDataAdapter({onSuccess:onSuccess}).proposal.session.getSessionsByProposal(username);

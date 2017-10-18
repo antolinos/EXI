@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">109.52</p>
+      <p class="stat">110.16</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">169</p>
+      <p class="stat">248</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">21.29</p>
+      <p class="stat">25.76</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.84</p>
+      <p class="stat">2.58</p>
     </div>
   </div>
 </div>
@@ -96,13 +96,8 @@
 
 	MainView.call(this);
 
-	this.grid = new QueueGrid({
-		collapsed : true,
-		positionColumnsHidden : true,
-		maxHeight : Ext.getCmp(&quot;main_panel&quot;).getHeight() - 50,
-		sorters : [ {
-			property : &#039;macromoleculeAcronym&#039;,
-			direction : &#039;ASC&#039; } ] });
+	this.grid = new OverviewQueueGrid({
+		height : 220 });
 
 	this.grid.onSelectionChange.attach(function(sender, elements) {
 		_this.onSelectionChange.notify(elements);
@@ -119,21 +114,22 @@
 	var _this = this;
 	_this.annotations = [];
 	_this.selectedFrameNumber = [];
+	_this.summary = [];
 	this.hplcGraph = new HPLCGraph({
 		title : &#039;I0&#039;,
-		width : 800,
-		height : 350,
+		width : 300,
+		height : 300,
 		bbar : true,
 		plots : {
 			&quot;I0&quot; : true,
 			&quot;Rg&quot; : true },
-		xlabel : &quot;HPLC Frames&quot;,
+		xlabel : &quot;Frames&quot;,
 		scaled : true,
 		interactionModel : {
 			&#039;dblclick&#039; : function(event, g, context) {
 				_this.selectedFrameNumber.push(g.lastx_);
+                //_this.selectedFrameNumber = [g.lastx_];
 				_this.plotter.loadHPLCFrame(_this.experimentId, _this.selectedFrameNumber);
-
 				_this.annotations.push({
 					series : g.selPoints_[0].name,
 					x : g.lastx_,
@@ -143,18 +139,45 @@
 					shortText : g.lastx_,
 					text : g.lastx_,
 					attachAtBottom : true });
+                   
 				g.setAnnotations(_this.annotations);
+                
+                /** Summary Panel */
+                _this.summary.push({
+                        frame :  g.lastx_,                   
+                        Mass : _.find(_this.hplcGraph.hplcData, {param : &#039;Mass&#039;}).data[g.lastx_],
+                        Rg : _.find(_this.hplcGraph.hplcData, {param : &#039;Rg&#039;}).data[g.lastx_],
+                        I0 : _.find(_this.hplcGraph.hplcData, {param : &#039;I0&#039;}).data[g.lastx_],
+                        downloadURL : EXI.getDataAdapter().saxs.hplc.getDownloadHDF5FramesURL(_this.experimentId, g.lastx_,g.lastx_)
+				});
+                
+                
+                
 
-			} } });
+               _this.populateSummary(_this.summary);
+
+               
+                
+			} 
+        } 
+    });
 
 	this.hplcGraph.onClearSelection.attach(function(sender) {
+		
 		_this.annotations = [];
 		_this.selectedFrameNumber = [];
 		_this.hplcGraph.dygraphObject.dygraph.setAnnotations([]);
+		_this.summary = [];
+		_this.plotter.loadHPLCFrame(_this.experimentId, []);
+
+		_this.populateSummary([]);
+
 	});
 
 	this.plotter = new CurvePlotter({
-		margin : &#039;10 0 0 0&#039; });
+		margin : 10,
+        width : 300
+     });
 
 	this.onSelect = new Event(this);
 	this.onDeselect = new Event(this);
@@ -162,27 +185,79 @@
 
 HPLCMainView.prototype.getPanel = MainView.prototype.getPanel;
 
+HPLCMainView.prototype.populateSummary = function(summary) {
+	 var html = &quot;&quot;;
+	dust.render(&quot;summary.hplcmainview.template&quot;, summary, function(err, out) {                                                                                                                                       
+		html = html + out;
+	});
+	$(&#039;#&#039; + this.id + &quot;summary&quot;).html(html);
+};
 
 HPLCMainView.prototype.getHeader = function(beamlineName, startDate) {
 	return &quot;&lt;span class=&#039;item&#039;&gt;&quot; + beamlineName + &quot;&lt;/span&gt;&lt;span class=&#039;item_description&#039;&gt;&quot; + startDate + &quot;&lt;/span&gt;&quot;;
 };
 
 HPLCMainView.prototype.getPlotContainer = function() {
-	return {
-		xtype : &#039;container&#039;,
-		cls : &#039;defaultGridPanel&#039;,
-		border : 0,
-		defaults : {
-			height : 450 },
-		items : [ this.hplcGraph.getPanel(), this.plotter.getPanel()
+	return  {
+                xtype : &#039;container&#039;,
+                cls : &#039;defaultGridPanel&#039;,
+                layout : &#039;hbox&#039;,
+                border : 1,
+                defaults : {height : 400 },
+		        items : [ this.hplcGraph.getPanel(), this.plotter.getPanel()
 		] };
 };
 
-HPLCMainView.prototype.getContainer = function() {
 
+HPLCMainView.prototype.getSecondaryContainer = function() {
+	return  {
+                xtype : &#039;container&#039;,
+                cls : &#039;defaultGridPanel&#039;,
+                layout : &#039;hbox&#039;,
+                border : 0,
+                defaults : {height : 400 },
+		        items : [
+                    {
+                        html : &#039;&lt;div style=&quot;text-align:center;&quot; class=&quot;alert alert-info&quot; role=&quot;alert&quot;&gt;Select a frame by double-clicking on the HPLC Frames plot&lt;/div&gt;&#039;,
+                        margin : 10,
+                        flex : 1
+                    },
+                    {
+                        html : &#039;&lt;div id=&quot;&#039; + this.id + &#039;summary&quot;&gt;&lt;/div&gt;&#039;,
+                        margin : 10,
+                        flex : 1
+                    }
+                    
+                ] };
+};
+
+HPLCMainView.prototype.getContainer = function() {
+    
 	return {
 		xtype : &#039;container&#039;,
-		items : [ this.grid.getPanel(), this.getPlotContainer() ] };
+        margin : 10,
+		items : [ 
+            
+            {
+              html : &#039;&lt;div id=&quot;&#039; + this.id +&#039;header&quot;&gt;&lt;/div&gt;&#039;,
+              margin : 10 ,
+              height : 160 
+            },
+            {
+              html : &#039; &lt;div class=&quot;panel panel-primary&quot;&gt;&lt;div class=&quot;panel-heading&quot;&gt;Data Collection&lt;/div&gt;&lt;/div&gt;&#039;,
+              margin : 10 ,
+              height : 40 
+            },
+           
+            this.grid.getPanel(), 
+              {
+              html : &#039;&lt;div class=&quot;panel panel-primary&quot;&gt;&lt;div class=&quot;panel-heading&quot;&gt;Size-exclusion chromatography&lt;/div&gt;&lt;/div&gt;&#039;,
+              margin : 10 ,
+              height : 40 
+            },
+            this.getPlotContainer(), 
+            this.getSecondaryContainer()
+             ] };
 };
 
 HPLCMainView.prototype.getSelected = function() {
@@ -221,24 +296,11 @@ HPLCMainView.prototype.loadHPLCGraph = function(experimentId) {
 			data : data.mass,
 			std : data.mass_Stdev,
 			color : &#039;#FF9900&#039;,
-			label : &quot;Mass&quot; }, {
-			param : &quot;Vc&quot;,
-			data : data.Vc,
-			std : data.Vc_Stdev,
-			color : &#039;#990099&#039;,
-			label : &quot;Vc&quot; }, {
-			param : &quot;Qr&quot;,
-			data : data.Qr,
-			std : data.Qr_Stdev,
-			color : &#039;#FF0066&#039;,
-			label : &quot;Qr&quot; }, {
-			param : &quot;quality&quot;,
-			label : &quot;quality&quot;,
-			color : &quot;#FF00FF&quot;,
-			data : data.quality,
-			std : zeroArray } ];
-		_this.hplcGraph.loadData(data);
-
+			label : &quot;Mass&quot; }
+		
+			 ];
+		_this.hplcGraph.loadData(data, experimentId);
+        
 	};
 
 	EXI.getDataAdapter({onSuccess : onSuccess}).saxs.hplc.getHPLCOverviewByExperimentId(experimentId);
@@ -247,15 +309,32 @@ HPLCMainView.prototype.loadHPLCGraph = function(experimentId) {
 HPLCMainView.prototype.load = function(experimentId) {
 		var _this = this;
 		this.experimentId = experimentId;
-
-		this.grid.panel.setLoading();
-
-		var onSuccess = function(sender, data) {
-			_this.grid.load(data);
-			_this.grid.panel.setLoading(false);
+	
+		var onSuccess = function(sender, data) {  
+            if (data){          
+			    _this.grid.load(data);
+                if (data[0]){
+                    var header = {
+                        creationDate : data[0].Experiment_creationDate,
+                        name : data[0].Experiment_name,
+                        type : data[0].Experiment_experimentType,
+                        hdf5 : data[0].Experiment_dataAcquisitionFilePath,
+                        url : EXI.getDataAdapter().saxs.hplc.getDownloadHDF5URL(data[0].Experiment_experimentId)
+                    }
+                    
+                    /** Renedering header */
+                     var html = &quot;&quot;;
+                     
+                    dust.render(&quot;header.hplcmainview.template&quot;, header, function(err, out) {
+                                                                                                                                        
+                        html = html + out;
+                    });
+                    $(&#039;#&#039; + _this.id + &quot;header&quot;).html(html);
+                }
+            }			
 		};
 
-		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByExperimentId(experimentId);
+		EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByExperiment(experimentId);
 		this.loadHPLCGraph(experimentId);
 };</textarea>
   </div>

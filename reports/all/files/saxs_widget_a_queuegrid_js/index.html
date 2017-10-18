@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - saxs/widget/a_queuegrid.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>saxs/widget/a_queuegrid.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">113.03</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">103</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">19.80</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.78</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">function QueueGrid(args) {
+    this.decimals = 3;
+	this.onSelect = new Event();
+
+	this.maxHeight = 600;
+	this.imgWidth = 77;
+	this.padding = 0;
+	
+	this.id = BUI.id();
+	this.title = &#039;Data Collections&#039;;
+	this.key = {};
+
+	this.selectionMode = &#039;MULTI&#039;;
+	
+	this.collapsible = true;
+	this.collapsed = false;
+	
+	var _this = this;
+	this.filters = [ function(item) {
+		if (item.data.dataCollectionId == null) {
+			return false;
+		}
+		if (_this.key[item.data.dataCollectionId] == null) {
+			_this.key[item.data.dataCollectionId] = [];
+		}
+		_this.key[item.data.dataCollectionId].push(item.data);
+		return item.data.macromoleculeId != null;
+	} ];
+	if (args!= null){
+		if (args.maxHeight != null){
+			this.maxHeight = args.maxHeight;
+		}
+		if (args.padding != null){
+			this.padding = args.padding;
+		}
+		if (args.collapsible != null){
+			this.collapsible = args.collapsible;
+		}
+		if (args.collapsed != null){
+			this.collapsed = args.collapsed;
+		}
+		if (args.selectionMode != null){
+			this.selectionMode = args.selectionMode;
+		}
+		if (args.title != null){
+			if (args.title == false){
+				this.title = null;
+			}
+		}
+	}
+	
+	this.selected = []; 
+	this.onSelectionChange = new Event();
+	this.onDeselect = new Event(this);
+	this.onSelect = new Event(this)
+}
+
+
+/**
+* It loads a set of data collections
+*
+* @method getImage
+* @param {subtractionId} subtractionId
+* @param {category} [&#039;scattering&#039; | &#039;kratky&#039; | &#039;density&#039; | &#039;guinier&#039;]
+*/
+QueueGrid.prototype.getImage = function(subtractionId, category) {	
+		return EXI.getDataAdapter().saxs.subtraction.getImage(subtractionId, category);
+};
+
+/**
+* Attaches the events to lazy load to the images. Images concerned are with the class queue-img
+*
+* @method attachCallBackAfterRender
+*/
+QueueGrid.prototype.attachCallBackAfterRender = function(nodeWithScroll) {
+    
+    var _this = this;
+    var lazy = {
+            bind: &#039;event&#039;,
+            /** !!IMPORTANT this is the parent node which contains the scroll **/
+            appendScroll: nodeWithScroll,
+            beforeLoad: function(element) {
+                console.log(&#039;image &quot;&#039; + (element.data(&#039;src&#039;)) + &#039;&quot; is about to be loaded&#039;);                                
+            },           
+            onFinishedAll: function() {
+                EXI.mainStatusBar.showReady();
+            }
+    };
+       
+    var timer1 = setTimeout(function() { $(&#039;.img-responsive&#039;).lazy(lazy);}, 500);
+	// var timer2 = setTimeout(function() {  $(&#039;.smalllazy&#039;).lazy(lazy);}, 500); 
+
+};
+
+QueueGrid.prototype.getPanel = function(){
+    var _this = this;
+
+	return {
+		html : &#039;&lt;div id=&quot;&#039; + this.id + &#039;&quot;&gt;&lt;/div&gt;&#039;,
+		autoScroll : false,
+        padding : this.padding
+	}
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

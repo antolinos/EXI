@@ -11,8 +11,103 @@ function SessionSummaryDataCollectionGrid(args) {
 }
 
 SessionSummaryDataCollectionGrid.prototype._getAutoprocessingStatistics = DataCollectionGrid.prototype._getAutoprocessingStatistics;
-SessionSummaryDataCollectionGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
+//SessionSummaryDataCollectionGrid.prototype.getColumns = DataCollectionGrid.prototype.getColumns;
 SessionSummaryDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.prototype.loadMagnifiers;
+
+
+
+SessionSummaryDataCollectionGrid.prototype.parseData = function(dataCollectionGroup) {
+    var parsed = [];
+    for (index in dataCollectionGroup){                                   
+                var data = dataCollectionGroup[index];
+                /** For thumbnail */
+                data.urlThumbnail = EXI.getDataAdapter().mx.dataCollection.getThumbNailById(data.lastImageId);
+                data.url = EXI.getDataAdapter().mx.dataCollection.getImageById(data.lastImageId);
+                data.ref = '#/mx/beamlineparameter/datacollection/' + data.DataCollection_dataCollectionId + '/main';
+                data.runNumber = data.DataCollection_dataCollectionNumber;
+                data.prefix = data.DataCollection_imagePrefix;
+                data.comments = data.DataCollectionGroup_comments;
+                data.sample = data.BLSample_name;
+                data.folder = data.DataCollection_imageDirectory;
+
+                
+                try{
+                    if (data.autoProcIntegrationId){                        
+                        data.resultsCount = _.uniq(data.autoProcIntegrationId.replace(/ /g,'').split(",")).length;
+                    }
+                }
+                catch(e){}
+               
+               
+                
+                /** For crystal */
+                data.xtal1 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 1);
+                data.xtal2 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 2);
+                data.xtal3 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 3);
+                data.xtal4 = EXI.getDataAdapter().mx.dataCollection.getCrystalSnapshotByDataCollectionId(data.DataCollection_dataCollectionId, 4);
+
+                /** Image quality indicator **/
+                data.indicator = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(data.DataCollection_dataCollectionId);                              
+
+                /** Gets the gif for snapshots if there is a workflow with snapshots **/
+                if (data.WorkflowStep_workflowStepType){
+                    if (data.WorkflowStep_workflowStepType.indexOf('Snapshots') != -1){
+                        if (data.WorkflowStep_workflowStepId){
+                            var listOfIds = data.WorkflowStep_workflowStepId.split(',');
+                            var listOfWorkflowStepType = data.WorkflowStep_workflowStepType.split(',');
+                            data.xtalAnimated = EXI.getDataAdapter().mx.workflowstep.getImageByWorkflowStepId(listOfIds[_.indexOf(listOfWorkflowStepType, 'Snapshots')]);
+                            this.imageAnimatedURL[data.xtal1] = data.xtalAnimated;
+                            this.imageAnimatedURL[data.xtalAnimated] = data.xtal1;
+                            data.hasAnimated = true;
+                        }
+                        
+                    }
+                }
+                
+                data.onlineresults = this._getAutoprocessingStatistics(data);
+                /** Screening displayed if 'Characterization' workflow or if indexing success */ 
+                if (data.Workflow_workflowType) {
+                    if (data.Workflow_workflowType == 'Characterisation') {
+                        data.screeningresults = [true];
+                    } else {
+                        data.screeningresults = [data.ScreeningOutput_indexingSuccess];
+                    }
+                    if (data.screeningresults[0]) {
+                        if (data.ScreeningOutput_indexingSuccess) {
+                            data.indexingresults = [true];
+                        } else {
+                            data.indexingresults = [false];
+                        }
+                    }
+                }
+               
+                /** We dont show screen if there are results of autoprocessing */
+                data.isScreeningVisible = true;
+                if (data.onlineresults){
+                    if (data.onlineresults.length > 0){
+                        data.isScreeningVisible = false;
+                    }                    
+                }
+                /** For the workflows **/
+                if (data.WorkflowStep_workflowStepType) {
+                    data.workflows = new WorkflowSectionDataCollection().parseWorkflow(data);
+                }
+                if (data.workflows == null) {
+                    data.workflows = [];
+                }
+                parsed.push(data);
+                /*
+                dust.render(_this.template, data, function(err, out) {                                                                       
+                    html = html + out;
+                });
+                
+                return html;*/
+
+     }
+     return parsed;
+       
+};
+
 
 /**
 * Loads the store and load the maginifiers
@@ -23,9 +118,18 @@ SessionSummaryDataCollectionGrid.prototype.loadMagnifiers = DataCollectionGrid.p
 SessionSummaryDataCollectionGrid.prototype.load = function(dataCollectionGroup){
     try{
         
-        var _this = this;
         this.dataCollectionGroup = dataCollectionGroup;
-        this.store.loadData(dataCollectionGroup);
+        var _this = this;
+        var parsedData =this.parseData(dataCollectionGroup);
+        var html = "";
+        dust.render(_this.template, parsedData, function(err, out) {                                                                       
+                    $("#" + _this.id).html(out);
+        });
+         
+       
+
+       
+
         this.loadMagnifiers(dataCollectionGroup);
         this.attachCallBackAfterRender();
     }
@@ -35,7 +139,8 @@ SessionSummaryDataCollectionGrid.prototype.load = function(dataCollectionGroup){
 };
 
 SessionSummaryDataCollectionGrid.prototype.getPanel = function(){
-    var _this = this;
+    
+    /*var _this = this;
     this.panel = Ext.create('Ext.grid.Panel', {
         border: 1,        
         store: this.store,  
@@ -48,7 +153,8 @@ SessionSummaryDataCollectionGrid.prototype.getPanel = function(){
             stripeRows: false
         }
     });  
-    return this.panel;
+    return this.panel;*/
+      return "<div  style='background-color:green;overflow-y:scroll;height:100vh;' id='" + this.id +"'>"+this.id +"</div>"
 };
 
 /**
@@ -160,17 +266,7 @@ SessionSummaryDataCollectionGrid.prototype.displayResultAutoprocessingTab = func
 
                     EXI.getDataAdapter({onSuccess : onSucessFiles}).mx.autoproc.getAttachmentListByautoProcProgramsIdList([autoprocProgramId])
                   
-            }
-
-            // Check if the click is not on the download button
-            /*if (_.indexOf(sender.target.classList,"glyphicon-download") < 0) {
-                var dataCollectionId = sender.currentTarget.id.split("-")[0];
-                var autoProcIntegrationId = sender.currentTarget.id.split("-")[1];
-                window.open('#/autoprocintegration/datacollection/' + dataCollectionId + '/autoprocIntegration/' + autoProcIntegrationId + '/main',"_blank");
-            }*/
-            
-             
-
+            }           
         });
     };
     var onError = function(sender, msg){
@@ -301,7 +397,7 @@ SessionSummaryDataCollectionGrid.prototype.attachCallBackAfterRender = function(
     
     var _this = this;                              
 
-    var nodeWithScroll = document.getElementById(document.getElementById(_this.id).parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id);
+    var nodeWithScroll = document.getElementById(document.getElementById(_this.id).parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id);
     var lazy = {
             bind: 'event',
             /** !!IMPORTANT this is the parent node which contains the scroll **/
@@ -356,7 +452,7 @@ SessionSummaryDataCollectionGrid.prototype.attachCallBackAfterRender = function(
                     }
                 }
             });
-            _this.panel.doLayout();
+           //_this.panel.doLayout();
 
     };
     var timer3 = setTimeout(tabsEvents, 500, _this);

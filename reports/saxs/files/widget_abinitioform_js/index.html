@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">103.50</p>
+      <p class="stat">120.19</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">115</p>
+      <p class="stat">34</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">23.14</p>
+      <p class="stat">16.50</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.77</p>
+      <p class="stat">0.17</p>
     </div>
   </div>
 </div>
@@ -115,93 +115,12 @@ function AbinitioForm(args) {
 		width : 700,
 		height : 600
 	});
-
-	this.abinitioGrid.onSelected.attach(function(sender, models) {
-		var modelsIdList = [];
-		for ( var i in models) {
-			modelsIdList.push(models[i].modelId);
-		}
-		
-		_this.curvePlotter.loadUrl(EXI.getDataAdapter().saxs.frame.getFramesURL([],[],[],[],[],modelsIdList));
-		_this._renderPDB(modelsIdList);
-	});
-
-	/** Dygraph Widget that plots fir files**/
-	this.curvePlotter = new CurvePlotter({
-	});
-	/** PDB viewer **/
-	this.viewer = new PDBViewer({
-		width : 500,
-		height : 300
-	});
-
 }
-
-
-AbinitioForm.prototype._renderPDB = function(modelsIdList) {
-	/** Trying to plot the PDB file **/
-	try {
-		var viz = [];
-		for (var i = 0; i &lt; modelsIdList.length; i++) {
-			viz.push({
-				modelId : modelsIdList[i],
-				color : new THREE.Color(0xFF6600),
-				opacity : 0.8
-			});
-		}
-		this.viewer.refresh(viz);
-	} catch (e) {
-		console.log(e);
-	}
-};
 
 
 
 AbinitioForm.prototype.getPanel = function() {
-	var _this = this;
-	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
-		width : this.width,
-		cls : &#039;border-grid&#039;,
-		layout : &#039;hbox&#039;,
-		height : this.height,
-		margin : 5,
-		border : 1,
-		defaultType : &#039;textfield&#039;,
-		items : [
-						{
-							xtype : &#039;container&#039;,
-							layout : &#039;vbox&#039;,
-							items : [
-//										{
-//											xtype : &#039;label&#039;,
-//											forId : &#039;myFieldId&#039;,
-//											text : &#039;INLINE HELP: To be updated&#039;,
-//											margin : &#039;15 0 20 10&#039;,
-//											cls : &quot;inline-help&quot;
-//										}, 
-										this.abinitioGrid.getPanel() 
-									]
-						},
-						{
-							xtype : &#039;container&#039;,
-							layout : &#039;vbox&#039;,
-							items : [
-										{
-											xtype : &#039;container&#039;,
-											layout : &#039;fit&#039;,
-											height : 300,
-											margin : &#039;10 0 0 0&#039;,
-											width : 500,
-											items : [
-											         	this.curvePlotter.getPanel()
-										     ]
-										},
-							         this.viewer.getPanel() 
-					         ]
-						}
-         ]
-	});
-	return this.panel;
+	return this.abinitioGrid.getPanel();
 };
 
 

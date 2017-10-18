@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">113.50</p>
+      <p class="stat">117.31</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">69</p>
+      <p class="stat">100</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">28.67</p>
+      <p class="stat">36.64</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.46</p>
+      <p class="stat">0.71</p>
     </div>
   </div>
 </div>
@@ -98,37 +98,68 @@
  * Filter by space group and lower rMerge
  * 
  */
-AutoprocessingRanker.prototype.rank = function(array, spacegroudFieldName, rmergeFieldName){
-    array = array.sort(function(a1, a2){        
-         var spaceGroudTrimmed1 = a1[spacegroudFieldName].replace(/\s+/g, &#039;&#039;);
-         var spaceGroudTrimmed2 = a2[spacegroudFieldName].replace(/\s+/g, &#039;&#039;);
+AutoprocessingRanker.prototype.rank = function(array, spacegroudFieldName){
+    
+   /** First sorting autoprocessing with rMerge &lt; 10 */
+   var minus10Rmerge  = _.filter(array, function(o) {       
+            if (o.innerShell){
+                if (o.innerShell.rMerge){                    
+                    if ((Number(o.innerShell.rMerge) &lt;= 10) &amp;&amp; (Number(o.innerShell.rMerge) &gt; 0)){
+                        return true;
+                    }
+                }
+            }
+            return false        
+     }); 
+     /** Second we get rMerge &gt; 10 */
+    var plus10Rmerge  = _.filter(array, function(o) {
         
-         var space1 = _.indexOf(ExtISPyB.spaceGroups, spaceGroudTrimmed1);
-         var space2 = _.indexOf(ExtISPyB.spaceGroups, spaceGroudTrimmed2);
+            if (o.innerShell){
+                if (o.innerShell.rMerge){                    
+                    if (Number(o.innerShell.rMerge) &gt; 10 || Number(o.innerShell.rMerge) &lt;= 0){
+                        return true;
+                    }
+                }
+            }
+            return false        
+     }); 
+   
+    
+     function sortByHighestSymmetry(a, b) {         
+        var spaceGroupA = a[spacegroudFieldName].replace(/\s/g, &quot;&quot;);        
+        var spaceGroupB = b[spacegroudFieldName].replace(/\s/g, &quot;&quot;);
         
-         /** Sort by rmerge */
-         if (space2 -  space1 == 0){
-             var rmerge1 = a1[&quot;overall&quot;][&quot;rMerge&quot;];
-             var rmerge2 = a2[&quot;overall&quot;][&quot;rMerge&quot;];
-             
-             if (rmerge1){
-                 if (rmerge2){
-                     return rmerge1 - rmerge2;
-                 }
-                 else{
-                     return 1;
-                 }
-             }
-             return -1;
-             
-         }
-         return space2 -  space1;
-      
-    });
-    for(var i =0; i &lt; array.length; i++){            
-            array[i].rank = i + 1;
+        if ( _.indexOf(ExtISPyB.spaceGroups, spaceGroupA) ==  _.indexOf(ExtISPyB.spaceGroups, spaceGroupB)){                          
+            return ( parseFloat(a.innerShell.rMerge) -  parseFloat(b.innerShell.rMerge));
+        }
+        return _.indexOf(ExtISPyB.spaceGroups, spaceGroupB) - _.indexOf(ExtISPyB.spaceGroups, spaceGroupA);                           
+       
     }
-    return array;
+    
+    function sortByrMerge(a, b) {                                    
+         return ( parseFloat(a.innerShell.rMerge) -  parseFloat(b.innerShell.rMerge));                                       
+    }
+
+    /** Sort rmerge &lt; 10 by highest symmetry 
+    for (var i = 0; i &lt; minus10Rmerge.length; i++){
+        console.log(minus10Rmerge[i][spacegroudFieldName]);
+    }*/
+   
+    minus10Rmerge.sort(sortByHighestSymmetry); 
+    plus10Rmerge.sort(sortByrMerge); 
+    
+    if (minus10Rmerge[0]){
+        minus10Rmerge[0].label = &quot;BEST&quot;;
+    }
+    
+    /** Setting lables */
+    if (plus10Rmerge){
+        for(var i = 0; i &lt; plus10Rmerge.length; i++){
+            plus10Rmerge[i].label = &quot;rMerge &gt; 10&quot;;
+        }
+    }
+       
+    return _.concat(minus10Rmerge, plus10Rmerge);    
 };
 
 AutoprocessingRanker.prototype.sortBySpaceGroup = function(array, spacegroudFieldName){

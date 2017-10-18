@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">101.81</p>
+      <p class="stat">108.81</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">122</p>
+      <p class="stat">149</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">35.15</p>
+      <p class="stat">28.74</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.23</p>
+      <p class="stat">1.55</p>
     </div>
   </div>
 </div>
@@ -95,75 +95,112 @@
 * @class DataCollectionMxMainView
 * @constructor
 */
-function DataCollectionMxMainView() {
-	this.icon = &#039;../images/icon/ic_satellite_black_18dp.png&#039;;
-	MainView.call(this);
-	var _this = this;
-	
-	this.genericDataCollectionPanel = new MXDataCollectionGrid();
-        this.energyScanGrid = new EnergyScanGrid();
-        this.xfeScanGrid = new XFEScanGrid();
+function DataCollectionMxMainView(args) {
+    this.icon = &#039;../images/icon/ic_satellite_black_18dp.png&#039;;
+    MainView.call(this);
+    var _this = this;
+
+    if (args) {
+        if (args.sessionId) {
+            this.sessionId = args.sessionId;
+        }
+    }
+
+    this.genericDataCollectionPanel = new MXDataCollectionGrid();
+    this.energyScanGrid = new EnergyScanGrid();
+    this.xfeScanGrid = new XFEScanGrid();
 }
 
 DataCollectionMxMainView.prototype.getPanel = MainView.prototype.getPanel;
 
 DataCollectionMxMainView.prototype.getContainer = function() {
-		this.container = Ext.create(&#039;Ext.tab.Panel&#039;, {       
-        padding : &quot;5 40 0 5&quot;,
-        items: [ {
-                        title: &#039;Data Collections&#039;,
-                        cls : &#039;border-grid&#039;,
-                        id : this.id + &quot;_dataCollectionTab&quot;,
-                        items:[
-                            this.genericDataCollectionPanel.getPanel()
-                        ]
-                }, 
-              
-                {
-                        title: &#039;Energy Scans&#039;,
-                        cls : &#039;border-grid&#039;,
-                        id : this.id + &quot;_energyTab&quot;,
-                        items:[
-                             this.energyScanGrid.getPanel()
-                        ]
-                },
-                 {
-                        title: &#039;Fluorescence Spectra&#039;,
-                        id : this.id + &quot;_xfeTab&quot;,
-                        cls : &#039;border-grid&#039;,                         
-                        items:[
-                            this.xfeScanGrid.getPanel()
-                        ]
-                }
-               ]
-        });
-	    return this.container;
-	
+    var _this = this;
+    this.container = Ext.create(&#039;Ext.tab.Panel&#039;, {   
+    minHeight : 900,    
+    padding : &quot;5 40 0 5&quot;,
+    items: [ {
+                    title: &#039;Data Collections&#039;,
+                    cls : &#039;border-grid&#039;,
+                    id : this.id + &quot;_dataCollectionTab&quot;,                        
+                    items:[
+                        this.genericDataCollectionPanel.getPanel()
+                    ]
+            }, 
+            {
+                    title: &#039;Energy Scans&#039;,
+                    cls : &#039;border-grid&#039;,
+                    id : this.id + &quot;_energyTab&quot;,
+                    items:[
+                            this.energyScanGrid.getPanel()
+                    ]
+            },
+            {
+                    title: &#039;Fluorescence Spectra&#039;,
+                    id : this.id + &quot;_xfeTab&quot;,
+                    cls : &#039;border-grid&#039;,                         
+                    items:[
+                        this.xfeScanGrid.getPanel()
+                    ]
+            },
+        ],
+        listeners: {
+            afterrender: function(panel){
+                var bar = panel.tabBar;
+                bar.insert(3,[
+                    {
+                        xtype: &#039;component&#039;,
+                        flex: 1
+                    },
+                    {
+                        html: &#039;&lt;span class=&quot;glyphicon glyphicon-download-alt&quot;&gt;&lt;/span&gt; Reports&#039;,
+                        padding: &#039;10px&#039;,
+                        hidden : true,
+                        closable : false,
+                        handler : function (sender,target) {
+                            var reportsForm = new ReportsForm();
+                            reportsForm.load(_this.sessionId,_this.proposal,_this.genericDataCollectionPanel.dataCollectionGroup,_this.energyScanGrid.energyScanList,_this.xfeScanGrid.data);
+                            reportsForm.show();
+                        }
+                    },               
+                ]);
+            }
+        }
+    });
+    return this.container;
 };
 
 DataCollectionMxMainView.prototype.loadEnergyScans = function(data) {
-     if (data){
-         if (data.length &gt; 0){
-            Ext.getCmp(this.id + &quot;_energyTab&quot;).setTitle(data.length + &quot; Energy Scans&quot;);  
-            this.energyScanGrid.load(data);
+    if (data){
+        if (data.length &gt; 0){
+            Ext.getCmp(this.id + &quot;_energyTab&quot;).setTitle(data.length + &quot; Energy Scans&quot;);              
+            this.energyScanGrid.load(data.reverse());
             return;
-         }
-     }
-     
-     Ext.getCmp(this.id + &quot;_energyTab&quot;).setDisabled(true);
+        }
+    }
+    
+    Ext.getCmp(this.id + &quot;_energyTab&quot;).setDisabled(true);
 };
 
 DataCollectionMxMainView.prototype.loadFXEScans = function(data) {  
     if (data){
         if (data.length &gt; 0){
             Ext.getCmp(this.id + &quot;_xfeTab&quot;).setTitle(data.length + &quot; Fluorescence Spectra&quot;);  
-            this.xfeScanGrid.load(data);
+            this.xfeScanGrid.load(data.reverse());
             return;
-         }
-     }
-     
-     Ext.getCmp(this.id + &quot;_xfeTab&quot;).setDisabled(true);
+            }
+        }
+        
+    Ext.getCmp(this.id + &quot;_xfeTab&quot;).setDisabled(true);
 };
+
+DataCollectionMxMainView.prototype.loadProposal = function (proposal) {
+    this.panel.setTitle(&quot;&quot;);
+    this.proposal = proposal;
+    this.panel.setTitle(this.proposal.Proposal_proposalCode + this.proposal.Proposal_proposalNumber);
+    this.panel.tab.on(&#039;click&#039;,function(){
+        location.href = &quot;#/welcome/manager/proposal/&quot;+ proposal.Proposal_proposalCode + proposal.Proposal_proposalNumber +&quot;/main&quot;;
+    });
+}
 
 DataCollectionMxMainView.prototype.loadCollections = function(dataCollections) {
 	var data = _.filter(dataCollections, function(u) {
@@ -179,20 +216,10 @@ DataCollectionMxMainView.prototype.loadCollections = function(dataCollections) {
                 if (data[i].DataCollectionGroup_startTime != null){
                     data[i].date =  moment(data[i].DataCollectionGroup_startTime, &quot;MMMM Do YYYY&quot;).format(&quot;MMMM Do YYYY&quot;);
                 }
-                
-                if (data[i].DataCollection_resolutionAtCorner != null){
-                    data[i].DataCollection_resolutionAtCorner = _.ceil( data[i].DataCollection_resolutionAtCorner, 2);
-                }
-                if (data[i].DataCollection_resolution != null){
-                    data[i].DataCollection_resolution = _.ceil( data[i].DataCollection_resolution, 2);
-                }
-                
-                if (data[i].DataCollection_wavelength != null){
-                    data[i].DataCollection_wavelength = _.ceil( data[i].DataCollection_wavelength, 3);
-                }
+                               
                 /** Axis  **/
                 if (data[i].DataCollection_axisEnd != null){
-                    if (data[i].DataCollection_axisStart != null){
+                    if (data[i].DataCollection_axisStart != null){                        
                         data[i].DataCollection_axisTotal = _.ceil(data[i].DataCollection_axisEnd - data[i].DataCollection_axisStart, 2);
                     }
                 }
@@ -211,7 +238,7 @@ DataCollectionMxMainView.prototype.loadCollections = function(dataCollections) {
         }
         Ext.getCmp(this.id + &quot;_dataCollectionTab&quot;).setTitle(data.length + &quot; Data Collections&quot;);
 	    if (data){            
-            this.genericDataCollectionPanel.load(data.reverse());
+            this.genericDataCollectionPanel.load(data);
         }
         return;	
     }

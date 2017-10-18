@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">114.32</p>
+      <p class="stat">111.63</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">142</p>
+      <p class="stat">203</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">21.62</p>
+      <p class="stat">29.86</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.31</p>
+      <p class="stat">2.39</p>
     </div>
   </div>
 </div>
@@ -96,8 +96,10 @@
 * @constructor
 */
 function ParcelGrid(args) {
+	this.id = BUI.id();
 	this.height = 100;
 	this.width = 100;
+	this.padding = 10;
 	this.btnEditVisible = true;
 	this.btnRemoveVisible = true;
 
@@ -108,6 +110,9 @@ function ParcelGrid(args) {
 		if (args.width != null) {
 			this.width = args.width;
 		}
+		if (args.padding != null) {
+			this.padding = args.padding;
+		}
 		if (args.btnEditVisible != null) {
 			this.btnEditVisible = args.btnEditVisible;
 		}
@@ -116,65 +121,99 @@ function ParcelGrid(args) {
 		}
 	}
 
+	this.shipment = null;
+	this.dewars = {};
+	this.parcelPanels = {};
+	this.samples = [];
+	this.withoutCollection = [];
+
 	/** Events **/
 	this.onSuccess = new Event(this);
 	this.onAdd = new Event(this);
 	this.onRemove = new Event(this);
 }
 
-ParcelGrid.prototype._getTopButtons = function() {
-	var _this = this;
-	var actions = [];
-	return [(Ext.create(&#039;Ext.Action&#039;, {
-		icon : &#039;../images/icon/add.png&#039;,
-		text : &#039;Add New Parcel&#039;,
-		disabled : false,
-		handler : function(widget, event) {
-			_this.edit();
-		}
-	}))];
-};
-
-ParcelGrid.prototype.load = function(shipment) {
+ParcelGrid.prototype.load = function(shipment,hasExportedData,samples,withoutCollection) {
 	var _this = this;
 	this.shipment = shipment;
 	this.dewars = shipment.dewarVOs;
-
-	this.parcelForms = [];
-
-	this.panel.removeAll();
+	this.hasExportedData = hasExportedData;
+	nSamples = 0;
+	nMeasured = 0;
+	if (samples) {
+		nSamples = samples.length;
+		nMeasured = nSamples - withoutCollection.length;
+		this.samples = _.groupBy(samples,&quot;Dewar_dewarId&quot;);
+		this.withoutCollection = _.groupBy(withoutCollection,&quot;Dewar_dewarId&quot;);
+	}
 
 	this.dewars.sort(function(a, b) {
 		return a.dewarId - b.dewarId;
 	});
 
-    function onSaved(sender, dewar) {
+	$(&quot;#&quot; + this.id + &quot;-label&quot;).html(&quot;Content (&quot; + this.dewars.length + &quot; Parcels - &quot; + nSamples + &quot; Samples - &quot; + nMeasured + &quot; Measured)&quot;);
+	$(&quot;#&quot; + this.id + &quot;-add-button&quot;).removeClass(&quot;disabled&quot;);
+	$(&quot;#&quot; + this.id + &quot;-add-button&quot;).unbind(&#039;click&#039;).click(function(sender){
+		_this.edit();
+	});
+	if (nSamples &gt; 0) {
+		$(&quot;#&quot; + this.id + &quot;-export&quot;).removeClass(&quot;disabled&quot;);
+		$(&quot;#&quot; + this.id + &quot;-export&quot;).unbind(&#039;click&#039;).click(function(sender){
+			var exportForm = new ExportPDFForm();
+			exportForm.load(_this.shipment);
+			exportForm.show();
+		});
+	}
+
+	this.fillTab(&quot;content&quot;, this.dewars);
+
+	this.attachCallBackAfterRender();
+};
+
+ParcelGrid.prototype.fillTab = function (tabName, dewars) {
+	var _this = this;
+	$(&quot;#&quot; + tabName + &quot;-&quot; + this.id).html(&quot;&quot;);
+	this.parcelPanels[tabName] = Ext.create(&#039;Ext.panel.Panel&#039;, {
+															// cls 		: &#039;border-grid&#039;,
+															// width 		: this.width,
+															autoScroll	:true,
+															autoHeight 	:true,
+															maxHeight	: this.height,
+															renderTo	: tabName + &quot;-&quot; + this.id
+														});
+
+	function onSaved(sender, dewar) {
 			_this.panel.setLoading();
 			dewar[&quot;sessionId&quot;] = dewar.firstExperimentId;
 			dewar[&quot;shippingId&quot;] = _this.shipment.shippingId;
 			
 			var onSuccess = function(sender, shipment) {				
 				_this.panel.setLoading(false);
+				_this.panel.doLayout();
 			};			
 			EXI.getDataAdapter({onSuccess : onSuccess}).proposal.dewar.saveDewar(_this.shipment.shippingId, dewar);
     }
-   
-	for ( var i in this.dewars) {
-		var parcelForm = new ParcelPanel({
-			height : 275,
-			width : this.width - 40
+	
+	for ( var i in dewars) {
+		var parcelPanel = new ParcelPanel({
+			height : 90,
+		width : this.panel.getWidth()*0.9,
+			shippingId : this.shipment.shippingId,
+			shippingStatus : this.shipment.shippingStatus,
+			index : Number(i)+1,
+			currentTab : tabName
 		});
-		this.panel.insert(parcelForm.getPanel());
-		parcelForm.load(this.dewars[i]);
-		parcelForm.onSavedClick.attach(onSaved);
-		this.parcelForms.push(parcelForm);
+		this.parcelPanels[tabName].insert(parcelPanel.getPanel());
+		parcelPanel.load(this.dewars[i],this.shipment,this.samples[this.dewars[i].dewarId],this.withoutCollection[this.dewars[i].dewarId]);
+		parcelPanel.onSavedClick.attach(onSaved);
 	}
-};
+	this.parcelPanels[tabName].doLayout();
+	this.panel.doLayout();
+}
 
 ParcelGrid.prototype.edit = function(dewar) {
 	var _this = this;
 	var caseForm = new CaseForm();
-
 	var window = Ext.create(&#039;Ext.window.Window&#039;, {
 		title : &#039;Parcel&#039;,
 		height : 450,
@@ -214,29 +253,51 @@ ParcelGrid.prototype.edit = function(dewar) {
 		} ]
 	});
 	window.show();
-
 };
 
 ParcelGrid.prototype.getPanel = function() {
-	var _this = this;
-	
-	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
-		cls : &#039;border-grid&#039;,
-		width : this.width,
-		autoScroll:true,
-        autoHeight :true,
-        maxHeight: this.height
-	});
 
-	this.panel.addDocked({
-		height : 45,
-		xtype : &#039;toolbar&#039;,
-		items : _this._getTopButtons(),
-		cls : &#039;exi-top-bar&#039;
+	var html = &quot;&quot;;
+
+	dust.render(&quot;parcel.grid.template&quot;,{id : this.id},function (err,out){
+		html = out;
+	})
+
+	this.panel =  Ext.create(&#039;Ext.panel.Panel&#039;, {
+		layout : &#039;fit&#039;,
+		// cls	: &#039;overflowed&#039;,
+		items : {
+					// cls	: &#039;border-grid&#039;,
+					html : &#039;&lt;div id=&quot;&#039; + this.id + &#039;&quot;&gt;&#039; + html + &#039;&lt;/div&gt;&#039;,
+					// width : this.width,
+					autoScroll:false,
+					autoHeight :true,
+					// maxHeight: this.height,
+					padding : this.padding
+				}
 	});
 
 	return this.panel;
-};</textarea>
+};
+
+ParcelGrid.prototype.attachCallBackAfterRender = function () {
+
+	var _this = this;
+	var tabsEvents = function(grid) {
+		this.grid = grid;
+		$(&#039;a[data-toggle=&quot;tab&quot;]&#039;).on(&#039;shown.bs.tab&#039;, function (e) {
+			var target = $(e.target).attr(&quot;href&quot;);
+			if (target.startsWith(&quot;#co&quot;)){
+				_this.fillTab(&quot;content&quot;,_this.dewars);
+			}
+			if (target.startsWith(&quot;#st&quot;)){
+				_this.fillTab(&quot;statistics&quot;,_this.dewars);
+			}
+			_this.panel.doLayout();
+		});
+    };
+    var timer3 = setTimeout(tabsEvents, 500, this);
+}</textarea>
   </div>
 </div>
 

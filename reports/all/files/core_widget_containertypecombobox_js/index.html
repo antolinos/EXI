@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - core/widget/containertypecombobox.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>core/widget/containertypecombobox.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">116.00</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">94</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">22.15</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.81</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">function ContainerTypeComboBox(args) {
+    this.id = BUI.id();
+
+    this.label = &quot;Choose Container Type:&quot;;
+    this.labelWidth = 200;
+    this.width = 500;
+    this.initDisabled = false;
+
+    this.data = [
+                    {&quot;type&quot;:&quot;SPINE&quot;, &quot;capacity&quot;:10},
+                    {&quot;type&quot;:&quot;UNIPUCK&quot;, &quot;capacity&quot;:16},
+                    {&quot;type&quot;:&quot;PLATE&quot;, &quot;capacity&quot;:96}
+                ]
+
+    if (args) {
+        if (args.label) {
+            this.label = args.label;
+        }
+        if (args.labelWidth) {
+            this.labelWidth = args.labelWidth;
+        }
+        if (args.width) {
+            this.width = args.width;
+        }
+        if (args.extraOptions != null) {
+            this.data = _.union(this.data, args.extraOptions);
+        }
+        if (args.initDisabled != null){
+            this.initDisabled = args.initDisabled;
+        }
+    }
+    this.onSelected = new Event(this);
+}
+
+ContainerTypeComboBox.prototype.getPanel = function () {
+    var _this = this;
+
+    var types = Ext.create(&#039;Ext.data.Store&#039;, {
+        fields: [&#039;type&#039;,&#039;capacity&#039;],
+        data : this.data
+    });
+
+    this.panel = Ext.create(&#039;Ext.form.ComboBox&#039;, {
+        layout:&#039;fit&#039;,
+        margin : &#039;5 0 5 5&#039;,
+        fieldLabel: this.label,
+        store: types,
+        labelStyle: &#039;padding:5px&#039;,
+        labelWidth : this.labelWidth,
+        displayField: &#039;type&#039;,
+        value:&#039;SPINE&#039;,
+        width: this.width,
+        disabled : this.initDisabled
+    });
+
+    this.panel.on(&#039;select&#039;, function(capacityCombo, record){
+		_this.onSelected.notify(record[0].data);
+	});
+
+	return this.panel;
+};
+
+ContainerTypeComboBox.prototype.getValue = function () {
+    return this.panel.getValue();
+};
+
+
+ContainerTypeComboBox.prototype.getSelectedType = function () {
+    var type = this.panel.getValue();
+    if (type == &quot;UNIPUCK&quot;) {
+        type = &quot;Unipuck&quot;;
+    }
+    else if (type == &quot;SPINE&quot;) {
+        type = &quot;Spinepuck&quot;;
+    }
+	return type;
+};
+
+ContainerTypeComboBox.prototype.getSelectedCapacity = function () {
+	return _.filter(this.data,{&quot;type&quot; : this.getValue()})[0][&quot;capacity&quot;];
+};
+
+ContainerTypeComboBox.prototype.getTypeByCapacity = function (capacity) {
+    return _.filter(this.data,{&quot;capacity&quot; : capacity})[0][&quot;type&quot;];
+};
+
+ContainerTypeComboBox.prototype.setValue = function (capacity) {
+    var type = this.getTypeByCapacity(capacity);
+    this.panel.setValue(type);
+};
+
+ContainerTypeComboBox.prototype.enable = function () {
+    this.panel.enable();
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

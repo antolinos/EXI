@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">96.38</p>
+      <p class="stat">104.11</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">167</p>
+      <p class="stat">174</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">26.04</p>
+      <p class="stat">27.97</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.15</p>
+      <p class="stat">1.32</p>
     </div>
   </div>
 </div>
@@ -93,14 +93,16 @@
     this.singleSite =false;
     this.siteURL = null;
     this.icon = null;
+   
 	this.onAuthenticate = new Event(this);
 }
+
 AuthenticationForm.prototype.show = function(){
 	this.window = Ext.create(&#039;Ext.window.Window&#039;, {
 	    title: &#039;Login&#039;,
 	    height: 250,
 	    closable :  false,
-	    width: 450,
+	    width: 480,
 	    modal : true,
 	    layout: &#039;fit&#039;,
 	    items: [
@@ -110,24 +112,21 @@ AuthenticationForm.prototype.show = function(){
 	this.window.show();
 };
 
-
-AuthenticationForm.prototype.getAuthenticationForm = function(){         
+AuthenticationForm.prototype.getAuthenticationForm = function(){   
+    
+    var _this = this;
+    var margin =  &#039;30 0 0 10&#039;;
      if (ExtISPyB.sites){
         if (ExtISPyB.sites.length &gt; 1){
-             var sites = Ext.create(&#039;Ext.data.Store&#039;, {
-                fields: [&#039;name&#039;, &#039;url&#039;, &#039;exiUrl&#039;],
-                data : ExtISPyB.sites
-            });
-            
-            return    {
-                        xtype: &#039;container&#039;,
-                        layout: &#039;vbox&#039;,
-                        items: [
-                        {
+            margin = &#039;10 0 0 10&#039;;
+        }
+     }
+
+    var items =  [{
                             xtype: &#039;textfield&#039;,
                             fieldLabel: &#039;User&#039;,
                             name: &#039;user&#039;,
-                            margin : &#039;10 0 0 10&#039;,
+                            margin :margin,
                             allowBlank: false
                         }, 
                         {
@@ -136,8 +135,26 @@ AuthenticationForm.prototype.getAuthenticationForm = function(){
                             margin : &#039;10 0 0 10&#039;,
                             name: &#039;password&#039;,
                             allowBlank: false,
-                            inputType : &#039;password&#039;
-                        },{
+                            inputType : &#039;password&#039;,
+                            enableKeyEvents : true,
+                            listeners: {
+                                specialkey: function (field, e) {
+                                    if (field.getValue() != &#039;null&#039;) {
+                                        if (e.getKey() === e.ENTER) {
+                                        _this.authenticate(this.up(&#039;form&#039;).getForm());
+                                        }
+                                    }
+                                }
+                            }
+      }];  
+     if (ExtISPyB.sites){
+        if (ExtISPyB.sites.length &gt; 1){
+            var sites = Ext.create(&#039;Ext.data.Store&#039;, {
+                fields: [&#039;name&#039;, &#039;url&#039;, &#039;exiUrl&#039;],
+                data : ExtISPyB.sites
+            });
+
+            items.push({
                             xtype : &#039;combo&#039;,
                             fieldLabel: &#039;Choose site&#039;,
                             name: &#039;site&#039;,
@@ -145,37 +162,21 @@ AuthenticationForm.prototype.getAuthenticationForm = function(){
                             allowBlank: false,
                             valueField : &#039;url&#039;,
                             displayField : &#039;name&#039;,
-                            margin : &#039;10 0 0 10&#039;
-	                    }    
-                        ]
-                    }
+                            margin : &#039;10 0 0 10&#039;,
+                            listeners: {
+                                select: function (field, e) {                                                                         
+                                            _this.authenticate(this.up(&#039;form&#039;).getForm());                                                                          
+                                }
+                            }
+	                    } );           
         }
      }
-    
-    
-     
-    return    {
-                xtype: &#039;container&#039;,
-                layout: &#039;vbox&#039;,
-                items: [
-                {
-                    xtype: &#039;textfield&#039;,
-                    fieldLabel: &#039;User&#039;,
-                    name: &#039;user&#039;,
-                    margin : &#039;30 0 0 10&#039;,
-                    allowBlank: false
-                }, 
-                {
-                    xtype: &#039;textfield&#039;,
-                    fieldLabel: &#039;Password&#039;,
-                    margin : &#039;10 0 0 10&#039;,
-                    name: &#039;password&#039;,
-                    allowBlank: false,
-                    inputType : &#039;password&#039;
-                }    
-                ]
-  };                  
-     
+             
+     return    {
+                        xtype: &#039;container&#039;,
+                        layout: &#039;vbox&#039;,                      
+                        items: items
+     };                 
 };
 
 
@@ -191,6 +192,29 @@ AuthenticationForm.prototype.getIconForm = function(){
                         };
 };
 
+AuthenticationForm.prototype.authenticate = function(form){
+    var _this = this;
+    var exiUrl;
+    var properties = null;
+    
+    if (!this.singleSite){
+        this.siteURL = form.getFieldValues().site;
+    }
+    
+    for (var i =0; i&lt; ExtISPyB.sites.length; i++){
+        if (ExtISPyB.sites[i].url == this.siteURL){
+            properties = ExtISPyB.sites[i];
+        }	        		
+    }           
+        
+    this.onAuthenticate.notify({
+        user : form.getFieldValues().user, 
+        password : form.getFieldValues().password, 
+        site : this.siteURL,
+        exiUrl : properties.exiUrl,
+        properties : properties
+    });
+};
 
 AuthenticationForm.prototype.getPanel = function(){
 	var _this = this;
@@ -208,7 +232,7 @@ AuthenticationForm.prototype.getPanel = function(){
     
 	return Ext.create(&#039;Ext.form.Panel&#039;, {
 	    bodyPadding: 5,
-	    width: 370,
+	    width: 400,
 	    layout: &#039;vbox&#039;,       
 	    defaults: {
 	        anchor: &#039;90%&#039;
@@ -216,44 +240,27 @@ AuthenticationForm.prototype.getPanel = function(){
 	    // The fields
 	    defaultType: &#039;textfield&#039;,
 	    items: [
-                        {
+				        {
                             xtype: &#039;container&#039;,
                             layout: &#039;hbox&#039;,
                             items: [
                                     this.getIconForm(),              
-                                    this.getAuthenticationForm()]
+                                    this.getAuthenticationForm()
+									]
                         }                                           
         ],
-	    buttons: [ {
-	        text: &#039;Login&#039;,
-	        formBind: true,
-	        disabled: true,
-	        handler: function() {
-	        	var form = this.up(&#039;form&#039;).getForm();	        	
-	        	var exiUrl;
-	        	var properties = null;
-                
-                 if (!_this.singleSite){
-                    _this.siteURL = form.getFieldValues().site;
-                }
-                
-	        	for (var i =0; i&lt; ExtISPyB.sites.length; i++){
-	        		if (ExtISPyB.sites[i].url == _this.siteURL){
-	        			properties = ExtISPyB.sites[i];
-	        		}	        		
-	        	}
-               
-                
-	        	_this.onAuthenticate.notify({
-	        		user : form.getFieldValues().user, 
-	        		password : form.getFieldValues().password, 
-	        		site : _this.siteURL,
-	        		exiUrl : properties.exiUrl,
-	        		properties : properties
-	        	});
-
-	        }
-	    }]
+       
+	    buttons: [ 
+		        &#039;If you are a User, please use the beamline proposal login.&#039;,
+                {
+                    text: &#039;Login&#039;,
+                    formBind: true,
+                    disabled: true,
+                    handler: function() {                             	
+                        _this.authenticate(this.up(&#039;form&#039;).getForm());
+	            }
+	    }
+		]
 	});
 };</textarea>
   </div>

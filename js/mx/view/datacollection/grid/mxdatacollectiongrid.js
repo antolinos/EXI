@@ -22,14 +22,21 @@ MXDataCollectionGrid.prototype.getPanel = function(dataCollectionGroup) {
 
     this.panel = Ext.create('Ext.panel.Panel', {  
         id: this.id,
-        minHeight : 900,
-        tbar: this.getToolBar(),        
-        items: [_this.activePanel.getPanel(dataCollectionGroup)]
+        height : "50vh",
+        //tbar: this.getToolBar(),        
+        items: [  
+                {
+                    html : "Here it comes the toolbar: View, report and others"
+                },          
+                {
+                    html : _this.activePanel.getPanel(dataCollectionGroup)
+                }
+            ]
      });
    
     return this.panel;
 };
-
+/*
 MXDataCollectionGrid.prototype.getToolBar = function() {
     var _this = this;
     function onMenuClicked(widget){
@@ -140,7 +147,7 @@ MXDataCollectionGrid.prototype.getToolBar = function() {
         ]
     });
 };
-
+*/
 MXDataCollectionGrid.prototype.reloadData = function(dataCollections) {
     this.panel.removeAll();
     this.panel.add(this.activePanel.getPanel(this.dataCollectionGroup));

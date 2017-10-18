@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">103.65</p>
+      <p class="stat">106.52</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">179</p>
+      <p class="stat">165</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">18.74</p>
+      <p class="stat">19.09</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.12</p>
+      <p class="stat">1.50</p>
     </div>
   </div>
 </div>
@@ -98,29 +98,23 @@
 	this.onMeasurementSelectionChange = new Event(this);
 	
 	var _this = this;
-	
-	this.frameSelectorGrid = new FrameSelectorGrid();
-	this.frameSelectorGrid.onSelectionChange.attach(function(sender, selections){
-		_this.plotter.load(selections);
+	this.selections = null;
+
+	this.framesGrid = new FramesGrid();
+	this.framesGrid.onSelectionChange.attach(function(sender, selections){
+		_this.selections = selections;
+		_this.selections.operation = $(&#039;input[name=optradio]:checked&#039;).val();		
+		_this.plotter.load(_this.selections);
 	});
 	
 	/** Curve plotter * */
 	this.plotter = new CurvePlotter({
 	});
 
-	this.grid = new QueueGrid({
-		maxHeight : 300
-	});
-	
-	
-	/** Abinitio **/
-	this.abinitioForm = new AbinitioForm({
-		height : 700
-	});
-	
+	this.grid = new OverviewQueueGrid({height : 220});				
 }
 
-PrimaryDataMainView.prototype.getPanel = MainView.prototype.getPanel;
+
 
 PrimaryDataMainView.prototype.getSlavePanel = function() {
 	return {
@@ -130,143 +124,135 @@ PrimaryDataMainView.prototype.getSlavePanel = function() {
 		margin : 5,
 		border : 0,
 		defaults : {
-			height : 600 
+			height : 400 
 		},
-		items : [ 
+		items : [
 		         {
-		        	 xtype : &#039;panel&#039;,
-		        	 layout: {
-		        	        type: &#039;accordion&#039;,
-		        	        titleCollapse: false,
-		        	        animate: true,
-		        	        activeOnTop: true
-		        	    },
-		        	    flex : 0.3,
-		        		border : 1,
-		        		style : {
-		        			borderColor : &#039;#000000&#039;,
-		        			borderStyle : &#039;solid&#039;,
-		        			borderWidth : &#039;1px&#039; },
-		        	 items : [
-		        	          this.frameSelectorGrid.getPanel()
-		        	         
+					title : &#039;&lt;label class=&quot;radio-inline&quot;&gt;&lt;input type=&quot;radio&quot; value=&quot;LOG&quot; name=&quot;optradio&quot; checked&gt;Log&lt;/label&gt;&lt;label class=&quot;radio-inline&quot;&gt;&lt;input type=&quot;radio&quot; value=&quot;LINEAL&quot; name=&quot;optradio&quot;&gt;Lineal&lt;/label&gt;&#039;,
+		        	xtype : &#039;panel&#039;,
+					autoScroll : true,
+					
+					flex : 0.2,
+					border : 1,
+					style : {
+						borderColor : &#039;#000000&#039;,
+						borderStyle : &#039;solid&#039;,
+						borderWidth : &#039;1px&#039; },
+		        	 items : [		        	        
+		        	                this.framesGrid.getPanel()
 		        	          ]
 		         },
-		         this.plotter.getPanel()
-		        
+		         this.plotter.getPanel()		        
 		    ]
 	};
-
 };
 
-
-PrimaryDataMainView.prototype.getContainer = function() {
-	return  Ext.createWidget(&#039;tabpanel&#039;,
-			{
-				plain : true,
-				height : 900,
-				margin : &#039;10 0 0 0&#039;,
-				items : [
-					{
-						tabConfig : {
-							title : &#039;Primary Data Reduction&#039;
-						},
-						items : [ {
-							xtype : &#039;container&#039;,
-							layout : &#039;fit&#039;,
-							height : 850,
-							padding : 20,
-							style : {
-								borderColor : &#039;gray&#039;,
-								borderStyle : &#039;solid&#039;,
-								borderWidth : &#039;1px&#039;,
-								&#039;background-color&#039; : &#039;white&#039; 
-							},
-							items : [ 
-										{
-											xtype : &#039;container&#039;,
-											items : [
-											         	this.grid.getPanel(),
-											        	this.getSlavePanel()         
-											]
-										}
-							]
-						}
-
-						]
-					},
-					{
-						tabConfig : {
-							title : &#039;Abinitio Modeling&#039;
-						},
-						items : [ {
-							xtype : &#039;container&#039;,
-							layout : &#039;fit&#039;,
-							height : 850,
-							padding : 20,
-							style : {
-								borderColor : &#039;gray&#039;,
-								borderStyle : &#039;solid&#039;,
-								borderWidth : &#039;1px&#039;,
-								&#039;background-color&#039; : &#039;white&#039; 
-							},
-							items : [ 
-										{
-											xtype : &#039;container&#039;,
-											items : [
-											         	this.abinitioForm.getPanel()
-											]
-										}
-							]
-						}
-
-						]
-					}
-			]
-			});
-};
-
-
-//PrimaryDataMainView.prototype.getContainer = function() {
-//	return {
-//		xtype : &#039;container&#039;,
-//		items : [
-//		         	this.grid.getPanel(),
-//		        	this.getSlavePanel()         
-//		]
-//	};
-//};
-
-PrimaryDataMainView.prototype.load = function(selected) {
+PrimaryDataMainView.prototype.getPanel = function() {
 	var _this = this;
-	this.panel.setTitle(&quot; Data Collection&quot;);
-	this.grid.panel.setLoading();
-	var onSuccess = function(sender, data) {
-		_this.grid.load(data);
-		_this.grid.panel.setLoading(false);
-		/** Measurements Grid * */
-		_this.frameSelectorGrid.load(data);
-		
-		/** Getting abinitio **/
-		if (data[0].subtractionId){
-			var onSuccessSubtraction = function(sender, subtractions) {
-				_this.abinitioForm.load(subtractions);
-			};
-			
-			EXI.getDataAdapter({onSuccess : onSuccessSubtraction}).saxs.subtraction.getSubtractionsBySubtractionIdList([data[0].subtractionId]);
-			
-		}
-	};
 
-	var dataCollectionIds = [];
-	for (var i = 0; i &lt; selected.length; i++) {
-		dataCollectionIds.push(selected[i].dataCollectionId);
+	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;,{
+            xtype : &#039;container&#039;,
+            autoScroll : true,							
+            layout : &#039;fit&#039;,
+            padding : 10,
+            style : {
+                borderColor : &#039;gray&#039;,
+                borderStyle : &#039;solid&#039;,
+                borderWidth : &#039;1px&#039;,
+                &#039;background-color&#039; : &#039;white&#039; 
+            },
+            items : [ 
+                        {
+                            xtype : &#039;container&#039;,
+                            items : [
+                                        this.grid.getPanel(),
+                                        this.getSlavePanel()         
+                            ]
+                        }
+            ]
+	});
 
+	this.panel.on(&#039;boxready&#039;,function(){
+		$(&#039;input:radio[name=optradio]&#039;).change(function () {
+			if (_this.selections){
+				_this.selections.operation = $(&#039;input[name=optradio]:checked&#039;).val();
+				_this.plotter.load(_this.selections);
+			}
+        });
+	});
+
+	return this.panel;
+};
+
+PrimaryDataMainView.prototype.load = function(dataCollectionId) {
+	var _this = this;
+	
+
+	var onSuccessA = function (sender, dataCollections) {        
+		_this.grid.load(dataCollections);
+				
+		var onSuccessFrames = function (sender, averages){
+			var allFrames = _.map(_.flatten(_.map(_.map(JSON.parse(averages), &#039;framelist3VO&#039;), &#039;frametolist3VOs&#039;)), &#039;frame3VO&#039;);
+			/** Retrieve subtraction */
+
+			 var onSuccessSubtractions = function(sender, data) {				 				 
+				 if (data){
+					 if (data[0].substraction3VOs){
+						 var subtraction = data[0].substraction3VOs[0];
+						 if (subtraction.sampleOneDimensionalFiles){			 
+							var frameFromSampleAveraged = _.map(subtraction.sampleOneDimensionalFiles.frametolist3VOs, &#039;frame3VO&#039;);
+							var frameFromBufferAveraged = _.map(subtraction.bufferOneDimensionalFiles.frametolist3VOs, &#039;frame3VO&#039;);
+						 
+							/** Identify discarded frames */
+							for (var i in allFrames){
+								var frame = allFrames[i];
+								if (_.find(_.concat(frameFromSampleAveraged, frameFromBufferAveraged), {filePath : frame.filePath})){
+									frame.discarded = false;
+								}
+								else{
+									frame.discarded = true;								
+								}
+								frame.type = &#039;Frame&#039;;
+								frame.domId = frame.frameId;
+							}
+						
+							allFrames = _.orderBy(allFrames, [&#039;filePath&#039;], [&#039;asc&#039;]);
+							allFrames.unshift({
+								filePath : subtraction.substractedFilePath,
+								frameId : subtraction.subtractionId,
+								domId : subtraction.subtractionId + &#039;Subtraction&#039;,
+								type : &#039;Subtraction&#039;
+							});
+							allFrames.unshift({
+								filePath : subtraction.bufferAverageFilePath,
+								frameId : subtraction.subtractionId,
+								domId : subtraction.subtractionId + &#039;BufferAverage&#039;,
+								type : &#039;BufferAverage&#039;
+							});
+							allFrames.unshift({
+								filePath : subtraction.sampleAverageFilePath,
+								frameId : subtraction.subtractionId,
+								domId : subtraction.subtractionId + &#039;SampleAverage&#039;,
+								type : &#039;SampleAverage&#039;
+							});
+							_this.framesGrid.load(allFrames);	
+							// if (subtraction.subtractionId){
+							// 	var onSuccessSubtraction = function(sender, subtractions) {                 
+							// 		_this.abinitioForm.load(subtractions);
+							// 	};			
+							// 	EXI.getDataAdapter({onSuccess : onSuccessSubtraction}).saxs.subtraction.getSubtractionsBySubtractionIdList([subtraction.subtractionId]);			
+							// }
+						} else {
+							_this.framesGrid.load(null);
+						}
+					 }
+				 }
+			 };
+ 			EXI.getDataAdapter({onSuccess : onSuccessSubtractions}).saxs.dataCollection.getDataCollectionsByDataCollectionId(dataCollectionId);
+		}		
+		EXI.getDataAdapter({onSuccess : onSuccessFrames}).saxs.frame.getFramesByAverageId(_.map(dataCollections, &#039;Merge_mergeId&#039;));
 	}
-	EXI.getDataAdapter({onSuccess : onSuccess}).saxs.dataCollection.getDataCollectionsByDataCollectionId(dataCollectionIds);
-	
-	
-	
+	EXI.getDataAdapter({onSuccess : onSuccessA}).saxs.dataCollection.getDataCollectionsById(dataCollectionId);
 };</textarea>
   </div>
 </div>

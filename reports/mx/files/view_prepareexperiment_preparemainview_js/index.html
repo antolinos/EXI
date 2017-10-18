@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">115.94</p>
+      <p class="stat">115.28</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">314</p>
+      <p class="stat">301</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">46.09</p>
+      <p class="stat">37.59</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">3.02</p>
+      <p class="stat">2.53</p>
     </div>
   </div>
 </div>
@@ -110,13 +110,12 @@ function PrepareMainView(args) {
         }
     }
 
-    this.steps = [&quot;&quot;,&quot;/selectSampleChanger&quot;,&quot;/loadSampleChanger&quot;,&quot;/confirm&quot;];
+    this.steps = [&quot;&quot;,&quot;/loadSampleChanger&quot;];
 
     this.height = 550;
     this.width = 1300;
     
     this.dewarListSelector = new DewarListSelectorGrid({height : this.height - 12, width : this.width - 60});
-    this.sampleChangerSelector = new SampleChangerSelector({height : this.height - 12, width : this.width - 0});
     this.loadSampleChangerView = new LoadSampleChangerView({height : this.height - 12, width : this.width - 0});
     this.confirmShipmentView = new ConfirmShipmentView();
 
@@ -139,17 +138,6 @@ function PrepareMainView(args) {
     this.selectedContainerCapacity = null;
     this.selectedPuck = null;
     this.sampleChangerName = null;
-
-    this.sampleChangerSelector.onSampleChangerSelected.attach(function(sender,changerName){
-        $(&#039;#next-button&#039;).attr(&quot;disabled&quot;, false);
-        $(&#039;#step-3&#039;).attr(&quot;disabled&quot;, false);
-        _this.sampleChangerName = changerName;
-        _this.save(&#039;sampleChangerName&#039;, changerName);
-        if (typeof(Storage) != &quot;undefined&quot;) {
-            sessionStorage.removeItem(&#039;puckData&#039;);
-        }
-        _this.loadSampleChangerView.sampleChangerName = changerName;
-    });
 
 };
 
@@ -184,20 +172,18 @@ PrepareMainView.prototype.updateStatus = function(shippingId, status) {
 */
 PrepareMainView.prototype.manageButtons = function () {
     if (this.currentStep == 1) {
-        $(&#039;#previous-button-div&#039;).hide();
-        $(&#039;#next-button&#039;).attr(&quot;disabled&quot;, false); 
+        Ext.getCmp(&quot;previous-button&quot;).hide();
+        Ext.getCmp(&quot;next-button&quot;).enable(); 
     } else {
-        $(&#039;#previous-button-div&#039;).show();
+        Ext.getCmp(&quot;previous-button&quot;).show();
+        Ext.getCmp(&quot;next-button&quot;).hide();
     }
-    if (this.currentStep == 2) {
-        $(&#039;#next-button&#039;).attr(&quot;disabled&quot;, true);
-    }
-    if (this.currentStep &lt; 3) {
-        $(&#039;#next-button-div&#039;).show();  
-        $(&#039;#done-button-div&#039;).hide();
-    }
-    if (this.currentStep == 3) {
-        $(&#039;#next-button-div&#039;).hide();
+    for (var i = 1 ; i &lt;= 2 ; i++){
+        if (i == this.currentStep) {
+            $(&#039;#step-&#039; + i).addClass(&#039;active-step&#039;);
+        } else {
+            $(&#039;#step-&#039; + i).removeClass(&#039;active-step&#039;);
+        }
     }
 };
 
@@ -211,25 +197,6 @@ PrepareMainView.prototype.manageButtons = function () {
 PrepareMainView.prototype.changeStep = function (direction) {
     this.currentStep += direction;
     location.href = &quot;#/mx/prepare/main&quot; + this.steps[this.currentStep-1];
-};
-
-/**
-* Manages the disable state of the step buttons
-*
-* @method manageStepButtons
-* @return 
-*/
-PrepareMainView.prototype.manageStepButtons = function () {
-    if (this.loadSampleChangerView.sampleChangerName == &quot;&quot;) {
-        $(&#039;#step-3&#039;).attr(&quot;disabled&quot;, true);
-    } else {
-        $(&#039;#step-3&#039;).attr(&quot;disabled&quot;, false);
-    }
-    for (var i = 1 ; i &lt;= 4 ; i++){
-        if (i == this.currentStep){
-            $(&#039;#step-&#039; + i).addClass(&#039;active-step&#039;);
-        }
-    }
 };
 
 /**
@@ -254,6 +221,8 @@ PrepareMainView.prototype.getPanel = function() {
     );
 
 	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
+        autoScroll : true,
+        buttons : this.getButtons(),
         layout: {
             type: &#039;vbox&#039;,
             align: &#039;center&#039;
@@ -262,31 +231,11 @@ PrepareMainView.prototype.getPanel = function() {
         height : this.height + 200,
         // cls : &#039;border-grid&#039;,
         items : [
-                    this.getToolBar(), this.container,  this.getButtons()
+                    this.getToolBar(), this.container
         ]
 	});
 
     this.panel.on(&#039;boxready&#039;, function() {
-        $(&#039;#next-button&#039;).unbind(&#039;click&#039;).click(function (sender){
-            if (_this.currentStep &lt; 4) {
-                _this.changeStep(1);
-            }
-        });
-        $(&#039;#previous-button&#039;).unbind(&#039;click&#039;).click(function (sender){
-            if (_this.currentStep &gt; 0) {
-                _this.changeStep(-1);             
-            }
-        });
-        $(&#039;.step-btn&#039;).unbind(&#039;click&#039;).click(function (sender){
-            if(sender.target.getAttribute(&quot;disabled&quot;) != &quot;disabled&quot;){
-                if (_this.loadSampleChangerView.sampleChangerWidget){
-                    _this.storeSampleChangerWidget(_this.loadSampleChangerView.sampleChangerWidget);
-                }
-                var direction = Number(sender.target.innerHTML) - _this.currentStep;
-                _this.changeStep(direction);
-            }
-        });
-        _this.manageStepButtons();
         _this.manageButtons();
     });
         
@@ -315,14 +264,44 @@ PrepareMainView.prototype.getToolBar = function () {
 * @method getButtons
 * @return The buttons html of the prepare experiment process.
 */
-PrepareMainView.prototype.getButtons = function () {
-    var html = &quot;&quot;;
-	dust.render(&quot;buttons.prepare.template&quot;, [], function(err, out){
-		html = out;
-	});
+// PrepareMainView.prototype.getButtons = function () {
+//     var html = &quot;&quot;;
+// 	dust.render(&quot;buttons.prepare.template&quot;, [], function(err, out){
+// 		html = out;
+// 	});
 
-    return {html : html, margin : 10};
-}
+//     return {html : html, margin : 10};
+// }
+
+PrepareMainView.prototype.getButtons = function() {
+	var _this = this;
+    
+	return [
+			{
+			    text: &#039;Previous&#039;,
+			    cls : &#039;btn btn-lg btn-success&#039;,
+                id : &#039;previous-button&#039;,
+                margin : &#039;0 0 0 300&#039;,
+			    handler : function(){
+			    	if (_this.currentStep &gt; 0) {
+                        _this.changeStep(-1);             
+                    }
+			    }
+			},
+	        &quot;-&gt;&quot;,
+	        {
+			    text: &#039;Next&#039;,
+			    cls : &#039;btn btn-lg btn-success&#039;,
+                id : &#039;next-button&#039;,
+                margin : &#039;0 300 0 0&#039;,
+			    handler : function(a,b,c){
+			    	if (_this.currentStep &lt; 4) {
+                        _this.changeStep(1);
+                    }
+			    }
+            }
+	];
+};
 
 /**
 * Loads the container according to the current step.
@@ -351,36 +330,31 @@ PrepareMainView.prototype.load = function() {
         };
         
         EXI.getDataAdapter({onSuccess : onSuccessProposal, onError:onError}).proposal.dewar.getDewarsByProposal();
-    } else if (this.currentStep == 2){
-        this.container.add(this.sampleChangerSelector.getPanel());
-        this.sampleChangerSelector.panel.setLoading();
-
-        var onSuccessProposal = function(sender, containers) { 
+    } else if (this.currentStep == 2) {
+        var onSuccessProposal = function(sender, containers) {     
             _this.containers = containers;
-            var beamlinesSelected = _.uniq(_.map(_.filter(_this.containers, function(e){return e.shippingStatus == &quot;processing&quot;;}),&#039;beamlineName&#039;));
-
-            if (beamlinesSelected.length &gt; 1) {
-                $.notify(&quot;Warning: Multiple beamlines selected&quot;, &quot;warn&quot;);
-            } else if (beamlinesSelected.length == 1) {
-                if (EXI.credentialManager.getBeamlineNames().indexOf(beamlinesSelected[0]) &gt;= 0){
-                    _this.sampleChangerSelector.selectRowByBeamlineName(beamlinesSelected[0]);
+            var beamlinesSelected = _.uniq(_.map(_.filter(_this.containers, function(e){return e.shippingStatus == &quot;processing&quot;;}),&#039;beamlineLocation&#039;));
+            if (beamlinesSelected.length &gt; 0) {
+                var beamline = _.filter(EXI.credentialManager.getBeamlinesByTechnique(&quot;MX&quot;),{&quot;name&quot;:beamlinesSelected[0]});
+                if (beamline.length &gt; 0) {
+                    _this.loadSampleChangerView.createSampleChangerWidget(beamline[0].sampleChangerType,beamline[0].name);
                 } else {
-                    $.notify(&quot;Warning: Unknown beamline&quot;, &quot;warn&quot;);
+                    
+                    //$.notify(&quot;Warning: Unknown beamline &quot; + beamlinesSelected[0], &quot;warn&quot;);
+                    _this.loadSampleChangerView.createSampleChangerWidget(&quot;FlexHCD&quot;,beamlinesSelected[0]);
+                }
+                for (var i = 1 ; i &lt; beamlinesSelected.length ; i++){
+                    var beamline = _.filter(EXI.credentialManager.getBeamlinesByTechnique(&quot;MX&quot;),{&quot;name&quot;:beamlinesSelected[i]});
+                    if (beamline.length == 0) {                        
+                        //$.notify(&quot;Warning: Unknown beamline &quot; + beamlinesSelected[i], &quot;warn&quot;);
+                    }
                 }
             }
-
-            _this.sampleChangerSelector.panel.setLoading(false);
-        };
-
-        var onError = function(sender, error) {        
-            EXI.setError(&quot;Ops, there was an error&quot;);
-            _this.sampleChangerSelector.panel.setLoading(false);
+            _this.container.add(_this.loadSampleChangerView.getPanel());
+            _this.loadSampleChangerView.load();
         };
         
-        EXI.getDataAdapter({onSuccess : onSuccessProposal, onError:onError}).proposal.dewar.getDewarsByProposal();
-    } else if (this.currentStep == 3) {
-        this.container.add(this.loadSampleChangerView.getPanel());
-        this.loadSampleChangerView.load();
+        EXI.getDataAdapter({onSuccess : onSuccessProposal}).proposal.dewar.getDewarsByProposal();
     }
 };
 
@@ -395,6 +369,19 @@ PrepareMainView.prototype.load = function() {
 PrepareMainView.prototype.save = function (key, value) {
     if (typeof(Storage) != &#039;undefined&#039;) {
         sessionStorage.setItem(key,value);
+    }
+}
+
+/**
+* Removes a key-value pair on the session storage
+*
+* @method removeFromStorage
+* @param {String} key The key of the key-value pair
+* @return 
+*/
+PrepareMainView.prototype.removeFromStorage = function (key) {
+    if (typeof(Storage) != &#039;undefined&#039;) {
+        sessionStorage.removeItem(key);
     }
 }
 

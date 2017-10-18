@@ -48,7 +48,7 @@
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">53</p>
+      <p class="stat">46</p>
     </div>
   </div>
   <div class="row historical">
@@ -117,13 +117,7 @@ SessionController.prototype.init = function() {
 	Path.map(&quot;#/session/nav&quot;).to(function() {
 			EXI.clearNavigationPanel();
             EXI.hideNavigationPanel();	
-			/*EXI.setLoadingNavigationPanel(true);
-			listView = new SessionListView();
-			listView.onSelect.attach(function(sender, selected) {
-				location.hash = &quot;/mx/datacollection/session/&quot; + selected[0].sessionId + &quot;/main&quot;;
-			});
-			EXI.addNavigationPanel(listView);
-            */
+		
             var mainView = new SessionMainView({
                 title : &quot;Sessions&quot;
             });
@@ -131,10 +125,9 @@ SessionController.prototype.init = function() {
             EXI.addMainPanel(mainView);
             
             var onSuccess = function(sender, data){
-            //    listView.load(EXI.proposalManager.getSessions().slice(0, 50));
+          
                  mainView.load(EXI.proposalManager.getSessions());
-            //    EXI.hideNavigationPanel();		
-            //    EXI.setLoadingNavigationPanel(false);
+         
                  EXI.setLoadingMainPanel(false);    
             };
             EXI.setLoadingMainPanel();

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - core/widget/containerparcelpanel.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>core/widget/containerparcelpanel.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">105.15</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">283</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">46.14</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">3.06</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+* Renders a panel that contains a puck widget and two buttons
+*
+* @class ContainerParcelPanel
+* @constructor
+*/
+function ContainerParcelPanel(args) {
+    this.id = BUI.id();
+    this.height = 220;
+    this.containerId = 0;
+    this.shippingId = 0;
+    this.shippingStatus = &quot;&quot;;
+    this.withoutCollection = true;
+    this.data = {puckType : &quot;Puck&quot;, 
+                mainRadius : this.height*0.75*0.9/2,
+                xMargin : this.width/2 - this.height*0.9/2, 
+                yMargin : 2.5,
+                code : &quot;&quot;,
+                enableMouseOver : true,
+                enableClick : true,
+                enableMainClick : true,
+                enableMainMouseOver : true,
+                containerId : 0,
+                capacity : 10,
+                showCode : true
+    };
+    this.width = 2*this.data.mainRadius + 20;
+    this.container = new ContainerWidget(this.data);
+
+	if (args != null) {
+        if (args.height != null) {
+			this.height = args.height;
+            this.data.mainRadius = this.height*0.75*0.9/2;
+            this.width = 2*this.data.mainRadius + 20;
+            this.data.xMargin = this.width/2 - this.data.mainRadius;
+		}
+        if (args.width != null) {
+			this.width = args.width;
+            this.data.xMargin = this.width/2 - this.data.mainRadius;
+		}
+        if (args.containerId != null) {
+			this.containerId = args.containerId;
+            this.data.containerId = this.containerId;
+		}
+        if (args.shippingId != null) {
+			this.shippingId = args.shippingId;
+		}
+        if (args.shippingStatus != null) {
+			this.shippingStatus = args.shippingStatus;
+		}
+        if (args.code != null) {
+            this.data.code = args.code;
+		}
+        if (args.type != null){
+            this.data.puckType = args.type;
+            if (args.type == &quot;SPINE Puck&quot;) {
+                this.data.puckType = &quot;Spinepuck&quot;;
+            }
+		}
+        if (args.capacity != null) {
+			this.data.capacity = args.capacity;
+		}
+        if (args.showCode != null) {
+			this.data.showCode = args.showCode;
+		}
+	}
+
+    if (this.height &lt; 45) {
+        this.data.showCode = false;
+    }
+    
+    this.onContainerRemoved = new Event(this);
+	
+};
+
+/**
+* Returns the panel containing the container and the buttons
+*
+* @class load
+* @return The panel containing the container and the buttons
+*/
+ContainerParcelPanel.prototype.getPanel = function () {
+    var _this = this;
+    this.container = this.createContainer(this.data);
+
+    var containerPanelHeight = 2*this.data.mainRadius + 5;
+    
+    this.containerPanel = Ext.create(&#039;Ext.panel.Panel&#039;, {
+        // cls : &#039;border-grid&#039;,
+        width : this.width,
+        height : containerPanelHeight,
+        items : [this.container.getPanel()]
+	});
+
+    this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
+        // cls : &#039;border-grid&#039;,
+        layout: {
+                type: &#039;vbox&#039;,
+                align: &#039;center&#039;,
+                pack: &#039;center&#039;
+        },
+        width : this.width,
+        height : this.height,
+        items : [
+                this.containerPanel
+                ]
+	});
+    
+    if (this.data.showCode) {
+        this.panel.insert({
+                    html : &quot;&lt;div class=&#039;container-fluid&#039; align=&#039;center&#039;&gt;&lt;span id=&#039;&quot; + this.id + &quot;-name&#039; style=&#039;font-size:&quot; + this.height*0.15 + &quot;px;&#039;&gt;&quot; + this.data.code + &quot;&lt;/span&gt;&lt;/div&gt;&quot;,
+                    height : this.height*0.25,
+                    width : this.width
+                });
+    }
+
+    return this.panel;
+};
+
+/**
+* Loads the container with the given samples
+*
+* @class load
+* @return
+*/
+ContainerParcelPanel.prototype.load = function (samples) {
+    if (samples != null &amp;&amp; samples.length &gt; 0){
+        if (this.data.puckType == &quot;Puck&quot;) {
+            _.map(samples,function (s) {s.location = parseInt(s.BLSample_location)});
+            if (_.maxBy(samples,&quot;location&quot;).location &gt; 10) {
+                this.data.puckType = &quot;Unipuck&quot;;
+                this.container = this.createContainer(this.data);
+            }
+        }
+        this.containerPanel.removeAll();
+        this.containerPanel.add(this.container.getPanel());
+        if (samples.length &gt; 0){
+            this.container.loadSamples(samples);
+            if (!this.container.containerId) {
+                this.container.containerId = this.containerId;
+            }
+            // this.shippingId = samples[0].Shipping_shippingId;
+        }
+        
+        var withoutCollection = _.filter(samples,{DataCollectionGroup_dataCollectionGroupId : null});
+        if (withoutCollection.length &lt; samples.length) {
+            this.withoutCollection = false;
+        }
+    }
+};
+
+/**
+* Removes the puck from the database
+*
+* @class removePuck
+* @return 
+*/
+ContainerParcelPanel.prototype.removePuck = function() {
+    this.panel.setLoading();
+    if (this.data.puckType == &quot;StockSolution&quot;) {
+        this.onContainerRemoved.notify(this.containerId);
+    } else {
+        var _this = this;
+        var onSuccess = function(sender, data){
+            _this.panel.setLoading(false);
+            _this.onContainerRemoved.notify(_this.containerId);
+        };
+        var containerId = this.containerId;
+        EXI.getDataAdapter({onSuccess: onSuccess}).proposal.shipping.removeContainerById(containerId,containerId,containerId );
+    }
+};
+
+ContainerParcelPanel.prototype.removeButtonClicked = function () {
+    var _this = this;
+    function showResult(result){
+        if (result == &quot;yes&quot;){
+            _this.removePuck();							
+        }
+    }
+    Ext.MessageBox.show({
+        title:&#039;Remove&#039;,
+        msg: &#039;Removing a container from this parcel will remove also its content. &lt;br /&gt;Are you sure you want to continue?&#039;,
+        buttons: Ext.MessageBox.YESNO,
+        fn: showResult,
+        animateTarget: &#039;mb4&#039;,
+        icon: Ext.MessageBox.QUESTION
+    });
+};
+
+ContainerParcelPanel.prototype.openEditOtherContainerForm = function () {
+    var _this = this;
+	/** Opens a window with the cas form **/
+	var otherContainerForm = new OtherContainerForm();
+	otherContainerForm.onSave.attach(function(sender,container){
+        $(&quot;#&quot; + _this.id + &quot;-name&quot;).html(container.code);
+        _this.container.samples = container.sampleVOs;
+        _this.container.capacity = container.capacity;
+        window.close();
+	})
+    
+	otherContainerForm.onCancel.attach(function(sender){
+		window.close();
+	})
+    
+	var window = Ext.create(&#039;Ext.window.Window&#039;, {
+	    title: &#039;Container&#039;,
+	    height: 600,
+	    width: 1500,
+	    modal : true,
+	    layout: &#039;fit&#039;,
+	    items: [
+	            	otherContainerForm.getPanel()
+	    ],
+        listeners : {
+			afterrender : function(component, eOpts) {
+				otherContainerForm.load(_this.container);
+			}
+	    },
+	});
+	window.show();
+}
+
+ContainerParcelPanel.prototype.createContainer = function (data) {
+    var _this = this;
+    var container = new ContainerWidget(data);
+    if (data.puckType == &quot;Puck&quot; || data.puckType == &quot;Unipuck&quot; || data.puckType == &quot;Spinepuck&quot;){
+        container = new PuckWidgetContainer(data);
+    } else if (data.puckType == &quot;StockSolution&quot;) {
+        data.stockSolutionId = this.containerId;
+        container= new StockSolutionContainer(data);
+    } else if (data.puckType == &quot;StatisticsPuck&quot;) {
+        container= new PuckStatisticsContainer(data);
+    }
+
+    container.onClick.attach(function (sender, id) {
+        var code = data.code;
+        if (code == &quot;&quot;) {
+            code = &quot;-&quot;;
+        }
+        
+        var window = Ext.create(&#039;Ext.window.Window&#039;, {
+            title: &#039;Container&#039;,
+            width: 250,
+            layout: &#039;fit&#039;,
+            modal : true,
+            items: [
+                        {
+                            html : &#039;&lt;div class=&quot;container-fluid&quot; style=&quot;margin:10px;&quot;&gt;&lt;div class=&quot;row&quot;&gt;&lt;span style=&quot;font-size:14px;color: #666;&quot;&gt;&lt;b&gt;Code:&lt;/b&gt; &#039; + code + &#039;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;span style=&quot;font-size:14px;color: #666;&quot;&gt;&lt;b&gt;Type:&lt;/b&gt; &#039; + _this.data.puckType + &#039;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;span style=&quot;font-size:12px;color: #666;&quot;&gt;Select one of the options below:&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&#039;,
+                        }
+            ],
+            buttons : [ {
+                            text : &#039;Edit&#039;,
+                            handler : function() {
+                                if (data.puckType == &quot;StockSolution&quot;) {
+                                    location.href = &quot;#/stocksolution/&quot; + _this.containerId + &quot;/main&quot;;                            
+                                } else if (data.puckType == &quot;OTHER&quot;) {
+                                    _this.openEditOtherContainerForm();
+                                } else {
+                                    location.href = &quot;#/shipping/&quot; + _this.shippingId + &quot;/&quot; + _this.shippingStatus + &quot;/containerId/&quot; + _this.containerId + &quot;/edit&quot;;                            
+                                }
+                                 window.close();
+                            }
+                        },{
+                            text : &#039;Remove&#039;,
+                            disabled : _this.shippingStatus == &quot;processing&quot; || !_this.withoutCollection,
+                            handler : function() {
+                                 _this.removeButtonClicked();
+                                 window.close();
+                            }
+                        }, {
+                            text : &#039;Cancel&#039;,
+                            handler : function() {
+                                window.close();
+                            }
+                        } ]
+        });
+        window.show();
+    });
+
+    container.onMouseOver.attach(function(sender, container){
+        container.focus(true);
+    });
+
+    container.onMouseOut.attach(function(sender, container){
+        container.focus(false);
+    });
+
+    return container;
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

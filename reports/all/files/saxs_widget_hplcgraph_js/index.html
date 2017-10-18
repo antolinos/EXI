@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">101.65</p>
+      <p class="stat">99.58</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">514</p>
+      <p class="stat">495</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">72.23</p>
+      <p class="stat">72.18</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">6.77</p>
+      <p class="stat">6.22</p>
     </div>
   </div>
 </div>
@@ -110,10 +110,7 @@
 	if (args != null) {
 		if (args.interactionModel != null) {
 			this.interactionModel = args.interactionModel;
-		}
-		if (args.width != null) {
-			this.width = args.width;
-		}
+		}		
 		if (args.height != null) {
 			this.height = args.height;
 		}
@@ -190,11 +187,14 @@ HPLCGraph.prototype.getMenu = function() {
 		} });
 
 	actions.push(&quot;-&gt;&quot;);
-	actions.push({
+	/** Dygraph.export is needed */
+	/*actions.push({
 		text : &quot;Save&quot;,
+		disabled : true,
 		scope : this,
 		icon : &#039;images/icon/ic_get_app_black_24dp.png&#039;,
 		handler : function(item, pressed) {
+			debugger
 			var largeImage = document.createElement(&quot;img&quot;);
 			largeImage.style.display = &#039;block&#039;;
 			largeImage.style.width = 200 + &quot;px&quot;;
@@ -202,7 +202,7 @@ HPLCGraph.prototype.getMenu = function() {
 			largeImage.setAttribute(&#039;src&#039;, Dygraph.Export.asCanvas(this.dygraphObject.dygraph).toDataURL());
 			window.open(Dygraph.Export.asCanvas(this.dygraphObject.dygraph).toDataURL(), &#039;Image&#039;, &#039;&#039;);
 		} });
-
+	*/
 	return actions;
 };
 
@@ -258,8 +258,7 @@ HPLCGraph.prototype.getPoint = function(data, i) {
 			return [ data.fstd(y - error), data.fdata(y), data.fstd(y + error) ];
 		}
 		return [ data.fdata(y) - error, data.fdata(y), data.fdata(y) + error ];
-	}
-	return point;
+	}	
 };
 
 HPLCGraph.prototype.reloadData = function(hplcData) {
@@ -358,8 +357,9 @@ HPLCGraph.prototype._renderDygraph = function(parsed, colors, labels) {
 
 };
 
-HPLCGraph.prototype.loadData = function(data) {
+HPLCGraph.prototype.loadData = function(data,experimentId) {
 	var _this = this;
+    this.experimentId = experimentId;
 	this.reloadData(data);
 	this.panel.addDocked({
 		cls : &#039;hplcMenu&#039;,
@@ -377,14 +377,14 @@ HPLCGraph.prototype.loadData = function(data) {
 				id : &#039;main_field_start&#039;,
 				fieldLabel : &#039;Range from&#039;,
 				width : 200,
-				labelWidth : 100,
+				labelWidth :60,
 				value : 0,
 				minValue : 0 }, {
 				xtype : &#039;numberfield&#039;,
 				id : &#039;main_field_end&#039;,
 				fieldLabel : &#039;to&#039;,
-				width : 130,
-				labelWidth : 30,
+				width : 140,
+				labelWidth : 20,
 				value : 0,
 				minValue : 0 }, {
 				xtype : &#039;button&#039;,
@@ -409,6 +409,28 @@ HPLCGraph.prototype.loadData = function(data) {
 						isZoomedIgnoreProgrammaticZoom : true,
 						dateWindow : [ start, end ] });
 				} },
+                {
+				xtype : &#039;button&#039;,
+				text : &#039;Download Range&#039;,
+                icon : &#039;../images/icon/ic_get_app_black_24dp.png&#039;,
+				handler : function() {
+					var start = parseFloat(Ext.getCmp(&quot;main_field_start&quot;).getValue());
+					var end = parseFloat(Ext.getCmp(&quot;main_field_end&quot;).getValue());
+
+					if (start &lt; 0) {
+						start = 0;
+					}
+					if (end &lt; 0) {
+						end = 0;
+					}
+					if (start &gt; end) {
+						var aux = end;
+						end = start;
+						start = aux;
+					}
+
+					location.href = EXI.getDataAdapter().saxs.hplc.getDownloadHDF5FramesURL(_this.experimentId,start, end)
+				} },
 				&quot;-&gt;&quot;,
 				 {
 					xtype : &#039;button&#039;,
@@ -423,13 +445,11 @@ HPLCGraph.prototype.loadData = function(data) {
 HPLCGraph.prototype.getPanel = function() {
 	var _this = this;
 	this.panel = Ext.create(&#039;Ext.panel.Panel&#039;, {
-		padding : this.plotPanelPadding,
-		//		width : this.width + 4 * this.plotInnerPanelPadding,
-		//		height : this.height + 4 * this.plotInnerPanelPadding - 100,
+		margin : this.plotPanelPadding, 
+        flex : 1,       		
 		items : [ {
 			html : &quot;&quot;,
-			id : this.id,
-			flex : 1,
+			id : this.id,			
 			height : this.height } ] });
 
 	this.panel.on(&quot;afterrender&quot;, function(panel) {
@@ -441,9 +461,7 @@ HPLCGraph.prototype.getPanel = function() {
 	return this.panel;
 };
 
-HPLCGraph.prototype.input = function() {
-	return DATADOC.getHPLCData();
-};
+
 
 HPLCGraph.prototype.getDataByFrameNumber = function(frameNumber) {
 	var data = {};
@@ -454,23 +472,6 @@ HPLCGraph.prototype.getDataByFrameNumber = function(frameNumber) {
 	return data;
 };
 
-HPLCGraph.prototype.test = function(targetId) {
-	var mainPlotPanel = new HPLCGraph({
-		title : &#039;I0&#039;,
-		width : 800,
-		height : 400,
-		plots : {
-			&quot;I0&quot; : true,
-			&quot;Rg&quot; : true,
-			&quot;Mass&quot; : true },
-		xlabel : &quot;HPLC Frames&quot;,
-		scaled : this.scaled,
-		interactionModel : {
-			&#039;dblclick&#039; : function(event, g, context) {} } });
-	mainPlotPanel.getPanel().render(targetId);
-	mainPlotPanel.loadData(mainPlotPanel.input());
-
-};
 
 function MergesHPLCGraph(args) {
 	HPLCGraph.prototype.constructor.call(this, args);
@@ -571,7 +572,7 @@ MergesHPLCGraph.prototype.getMenu = function() {
 	actions.push({
 		text : &quot;Save&quot;,
 		scope : this,
-		icon : &#039;images/icon/ic_get_app_black_24dp.png&#039;,
+		icon : &#039;../images/icon/ic_get_app_black_24dp.png&#039;,
 		handler : function(item, pressed) {
 			var largeImage = document.createElement(&quot;img&quot;);
 			largeImage.style.display = &#039;block&#039;;
@@ -582,26 +583,6 @@ MergesHPLCGraph.prototype.getMenu = function() {
 		} });
 
 	return actions;
-};
-
-MergesHPLCGraph.prototype.input = function() {
-	return DATADOC.getScatteringHPLCFrameData();
-};
-
-MergesHPLCGraph.prototype.test = function(targetId) {
-	var mainPlotPanel = new MergesHPLCGraph({
-		title : &#039;Scattering&#039;,
-		width : this.plotWidth,
-		height : 500,
-		showRangeSelector : false,
-		xParam : 0,
-		xlabel : &quot;scattering_I&quot;,
-		plots : {
-			&quot;scattering_I&quot; : true,
-			&quot;subtracted_I&quot; : true,
-			&quot;buffer_I&quot; : true } });
-	mainPlotPanel.getPanel().render(targetId);
-	mainPlotPanel.loadData(mainPlotPanel.input());
 };</textarea>
   </div>
 </div>

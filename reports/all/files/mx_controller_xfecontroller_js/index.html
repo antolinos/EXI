@@ -48,7 +48,7 @@
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">29</p>
+      <p class="stat">27</p>
     </div>
   </div>
   <div class="row historical">
@@ -113,8 +113,6 @@ XfeController.prototype.notFound = ExiGenericController.prototype.notFound;
 XfeController.prototype.init = function() {
 	var _this = this;
 	var listView;	
-
-	
 
 	Path.map(&quot;#/mx/xfe/:xfeFluorescenceSpectrumId/main&quot;).to(function() {
 		var mainView = new XfeViewerMainView();

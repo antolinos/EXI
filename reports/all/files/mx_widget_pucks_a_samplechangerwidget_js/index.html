@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">107.87</p>
+      <p class="stat">101.67</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">314</p>
+      <p class="stat">480</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">70.00</p>
+      <p class="stat">92.36</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">3.43</p>
+      <p class="stat">6.02</p>
     </div>
   </div>
 </div>
@@ -103,9 +103,11 @@ function SampleChangerWidget (args) {
 	this.isLoading = true;
 	this.radius = 200;
 	this.name = &#039;&#039;;
-	this.onPuckSelected = new Event(this);
+	
 	this.sampleChangerCapacity = 0; //This is set in each sample changer type
+	this.beamlineName = &quot;&quot;;
 
+    this.data = {};
 	if (args) {
 		if (args.radius){
 			this.radius = args.radius;
@@ -113,14 +115,33 @@ function SampleChangerWidget (args) {
 		if (args.isLoading != null){
 			this.isLoading = args.isLoading;
 		}
+		if (args.beamlineName){
+			this.beamlineName = args.beamlineName;
+		}
 	}
+
+
+	this.onPuckSelected = new Event(this);
 };
+
+/**
+* It blinks the sample changer by fading IN and OUT
+*
+* @method blink
+*/
+SampleChangerWidget.prototype.blink = function () {
+    $(&#039;#&#039; + this.id).fadeIn().fadeOut().fadeIn();
+	var allPucks = this.getAllPucks();
+	for (var i = 0 ; i &lt; allPucks.length ; i++) {
+		allPucks[i].blink();
+	}
+}
 
 /**
 * Create certain types of pucks following a circular path
 *
 * @method createPucks
-* @param {Integer} puckType The type of puck (1 is Uni, 2 is Spine)
+* @param {Integer} puckType The type of puck (&quot;Unipuck&quot;, &quot;Spinepuck&quot;, &quot;Puck&quot;)
 * @param {Integer} n The number of pucks
 * @param {Double} initAlpha Initial angle where to start to add pucks
 * @param {Double} dist The distance to the center of the puck where the cells are positioned
@@ -130,7 +151,8 @@ function SampleChangerWidget (args) {
 SampleChangerWidget.prototype.createPucks = function (puckType, n, initAlpha, dist, marginPercent, args) {
 	var rad = dist*Math.sin((Math.PI/this.data.cells)*marginPercent);
 	this.pucks[puckType] = [];
-	for (var i = 0 ; Math.abs(i) &lt; n ; i += this.clockwise) {
+
+	for (var i = 0 ; Math.abs(i) &lt; n ; i += this.clockwise) {		
 		var ang = i*2*Math.PI/n;
 		var puckIndex = this.getPuckIndexFromAngle(this.initAlpha, 1, this.initAlpha + this.clockwise*(2*Math.PI*(1 - 1/this.data.cells)), this.data.cells, initAlpha + ang);		
 		var puckId = this.id + &quot;-&quot; + puckIndex + &quot;-1&quot;;
@@ -180,7 +202,7 @@ SampleChangerWidget.prototype.getPanel = function () {
 		    layout:&#039;absolute&#039;,
             items : [
 						{
-							html : this.getStructure(),
+							html : this.getStructure(this.data),
 							frame: false,
 							border: false,
 							bodyStyle: &#039;background:transparent;&#039;
@@ -188,6 +210,10 @@ SampleChangerWidget.prototype.getPanel = function () {
 			],
 			
 	});
+
+	if (this.onRender) {
+		this.panel.on(&#039;boxready&#039;,function() {_this.onRender()});
+	}
 
 	for (puckType in this.pucks) {
 		for (puck in this.pucks[puckType]){
@@ -223,25 +249,32 @@ SampleChangerWidget.prototype.loadSamples = function (samples, containerIdsMap) 
 	for (puckIndex in _.keys(pucksToBeLoaded)) {
 		var puck = this.findPuckById(_.keys(pucksToBeLoaded)[puckIndex]);
 		if (pucksToBeLoaded[puck.id].length &lt;= puck.capacity){
-			var errorSamples = [];
 			var currentDewar = pucksToBeLoaded[puck.id][0].Dewar_dewarId;
 			for (var i = 0 ; i &lt; pucksToBeLoaded[puck.id].length ; i++) {
 				var sample = pucksToBeLoaded[puck.id][i];
 				if (Number(sample.BLSample_location) &gt; puck.capacity) {
-					errorSamples.push(sample);
+					sample.hasError = true;
 					errorPucks = _.union(errorPucks,[puck]);
+					$(&quot;#&quot; + puck.id).addClass(&quot;puck-error&quot;);
 				}
 				if (sample.Dewar_dewarId != currentDewar) {
 					errorPucks = _.union(errorPucks,[puck]);
+					$(&quot;#&quot; + puck.id).addClass(&quot;puck-error&quot;);
+				}
+				if (sample.BLSample_location == &quot;&quot;){
+					sample.hasError = true;
+					errorPucks = _.union(errorPucks,[puck]);
+					$(&quot;#&quot; + puck.id).addClass(&quot;puck-error&quot;);
 				}
 			}
-			_.remove(pucksToBeLoaded[puck.id], function (o) {return errorSamples.indexOf(o) &gt;= 0});
-			puck.loadSamples(pucksToBeLoaded[puck.id]);
+			// _.remove(pucksToBeLoaded[puck.id], function (o) {return errorSamples.indexOf(o) &gt;= 0});
 		} else {
-			$.notify(&quot;Capacity Error: Couldn&#039;t load correctly the puck at location &quot; + this.convertIdToSampleChangerLocation(puck.id) + &quot;.&quot;, &quot;error&quot;);
+			// $.notify(&quot;Capacity Error: Couldn&#039;t load correctly the puck at location &quot; + this.convertIdToSampleChangerLocation(puck.id) + &quot;.&quot;, &quot;error&quot;);
 			puck.containerId = pucksToBeLoaded[puck.id][0].Container_containerId;
 			errorPucks.push(puck);
+			$(&quot;#&quot; + puck.id).addClass(&quot;puck-error&quot;);
 		}
+		puck.loadSamples(pucksToBeLoaded[puck.id]);
 	}
 	return errorPucks;
 };
@@ -252,7 +285,7 @@ SampleChangerWidget.prototype.loadSamples = function (samples, containerIdsMap) 
 * @method load
 * @param {Object} data Keys are the ids and the values are puckWidget data 
 */
-SampleChangerWidget.prototype.load = function (data) {
+SampleChangerWidget.prototype.load = function (data) {	
 	for (i in _.keys(data)){
 		var location = _.keys(data)[i].substring(_.keys(data)[i].indexOf(&#039;-&#039;)+1);
 		var puck = this.findPuckById(this.id + &quot;-&quot; + location);
@@ -265,14 +298,102 @@ SampleChangerWidget.prototype.load = function (data) {
 *
 * @method getStructure
 */
-SampleChangerWidget.prototype.getStructure = function () {
+SampleChangerWidget.prototype.getStructure = function (data) {
 	var html = &quot;&quot;;
-	dust.render(&quot;structure.sampleChanger.template&quot;, this.data, function(err, out){
+    
+	dust.render(&quot;structure.sampleChanger.template&quot;, data, function(err, out){
 		html = out;
 	});
 	
 	return html;
 };
+
+SampleChangerWidget.prototype.createHCDStructure = function (data) {
+		for (var i = 0 ; i &lt; this.data.cells/2 ; i++){
+		var ang = i*2*Math.PI/this.data.cells;
+		var line = {
+			x1 : this.data.radius*Math.sin(ang) + this.data.radius,
+			y1 : this.data.radius*Math.cos(ang) + this.data.radius,
+			x2 : -this.data.radius*Math.sin(ang) + this.data.radius,
+			y2 : -this.data.radius*Math.cos(ang) + this.data.radius
+		};
+		this.data.lines.push(line);
+	}
+
+	var textR = this.data.radius*0.31;
+	var textRBig = this.data.radius*0.94;
+	var dAlpha = Math.PI/16;
+	var currentNumber = 1;
+	var textSize = Math.round((15-7)*(this.data.radius-100)/(200-100) + 7);
+	for (var i = 0 ; i &lt; this.data.cells ; i++){
+		var ang = i*2*Math.PI/this.data.cells;
+		this.data.text.push({
+			text : 1,
+			x : textRBig*Math.sin(this.initAlpha + ang - dAlpha) + this.data.radius,
+			y : -textRBig*Math.cos(this.initAlpha + ang - dAlpha) + this.data.radius,
+			textSize : textSize
+		});
+		currentNumber++;
+		this.data.text.push({
+			text : 2,
+			x : textRBig*Math.sin(this.initAlpha + ang + dAlpha) + this.data.radius,
+			y : -textRBig*Math.cos(this.initAlpha + ang + dAlpha) + this.data.radius,
+			textSize : textSize
+		});
+		currentNumber++;
+		this.data.text.push({
+			text : 3,
+			x : textR*Math.sin(this.initAlpha + ang) + this.data.radius,
+			y : -textR*Math.cos(this.initAlpha + ang) + this.data.radius,
+			textSize : textSize
+		});
+		currentNumber++;
+
+		/** Drawing the labels for cells */
+		if (!this.data.circle){ 
+			this.data.circle = [];
+		}
+		var r = 12;
+		
+		if (i == 0 || i == 1 || i == 4 || i ==5 ){
+			this.data.text.push({
+				text :  i + 1,
+				stroke : &#039;gray&#039;,
+				x : textRBig*Math.sin(this.initAlpha + ang + (dAlpha/2)) + this.data.radius,
+				y :  -textRBig*Math.cos(this.initAlpha + ang - (dAlpha/2)) + this.data.radius + r/2,
+				textSize : textSize
+			});
+
+			this.data.circle.push({		
+				cx : textRBig*Math.sin(this.initAlpha + ang + (dAlpha/2)) + this.data.radius,
+				cy :  -textRBig*Math.cos(this.initAlpha + ang - (dAlpha/2)) + this.data.radius,
+				stroke : &#039;gray&#039;,
+				&quot;fill-opacity&quot; : 0.2,
+				fill : &#039;white&#039;,
+				r : r
+			});
+		}
+		else{
+			this.data.text.push({
+				text :  i +1,
+				stroke : &#039;gray&#039;,
+				x : textRBig*Math.sin(this.initAlpha + ang- (dAlpha/2)) + this.data.radius,
+				y :  -textRBig*Math.cos(this.initAlpha + ang + (dAlpha/2)) + this.data.radius + r/2,
+				textSize : textSize
+			});
+
+			this.data.circle.push({		
+				cx : textRBig*Math.sin(this.initAlpha + ang - (dAlpha/2)) + this.data.radius,
+				cy :  -textRBig*Math.cos(this.initAlpha + ang + (dAlpha/2)) + this.data.radius,
+				stroke : &#039;gray&#039;,
+				&quot;fill-opacity&quot; : 0.2,
+				fill : &#039;white&#039;,
+				r : r
+			});
+		}
+	}
+};
+
 
 /**
 * Returns a certain puck given its id
@@ -337,7 +458,7 @@ SampleChangerWidget.prototype.setClickListeners = function () {
 		var puck = allPucks[puckIndex];
 		$(&quot;#&quot; + puck.puckWidget.id).css(&#039;cursor&#039;,&#039;pointer&#039;);
 		$(&quot;#&quot; + puck.puckWidget.id).unbind(&#039;click&#039;).click(function(sender){
-			if (!sender.target.classList.contains(&#039;puck-disabled&#039;)){
+			if (!sender.target.classList.contains(&#039;puck-disabled&#039;) &amp;&amp; !sender.target.classList.contains(&#039;puck-always-disabled&#039;)){
 				_this.onPuckSelected.notify(_this.findPuckById(sender.target.id));
 			}
 		});
@@ -351,7 +472,6 @@ SampleChangerWidget.prototype.setClickListeners = function () {
 * @param {Integer} capacity The capacity of the allowed pucks
 */
 SampleChangerWidget.prototype.disablePucksOfDifferentCapacity = function (capacity) {
-	var _this = this;
 	var allPucks = this.getAllPucks();
 	for (puckIndex in allPucks) {
 		var puck = allPucks[puckIndex];
@@ -363,16 +483,62 @@ SampleChangerWidget.prototype.disablePucksOfDifferentCapacity = function (capaci
 };
 
 /**
+* Adds the disabled style class to the puck
+*
+* @method disablePuck
+* @param puck The puck to be disabled
+*/
+SampleChangerWidget.prototype.disablePuck = function (puck) {
+	$(&quot;#&quot; + puck.id).addClass(&quot;puck-disabled&quot;);
+	puck.disableAllCells();
+};
+
+/**
+* Adds the class to the puck
+*
+* @method addClassToPuck
+* @param puck The puck to have the class added
+* @param cls The class to add
+*/
+SampleChangerWidget.prototype.addClassToPuck = function (puck,cls) {
+	$(&quot;#&quot; + puck.id).addClass(cls);
+};
+
+/**
 * Removes the disabled style class to all pucks
 *
-* @method allowAllPucks
+* @method enableAllPucks
 */
-SampleChangerWidget.prototype.allowAllPucks = function () {
-	var _this = this;
+SampleChangerWidget.prototype.enableAllPucks = function () {
 	var allPucks = this.getAllPucks();
 	for (puckIndex in allPucks) {
 		var puck = allPucks[puckIndex];
 		$(&quot;#&quot; + puck.puckWidget.id).removeClass(&quot;puck-disabled&quot;);
+		puck.puckWidget.allowAllCells();
+	}
+};
+
+/**
+* Removes the disabled style class to the puck
+*
+* @method enablePuck
+* @param puck The puck to be enabled
+*/
+SampleChangerWidget.prototype.enablePuck = function (puck) {
+	$(&quot;#&quot; + puck.id).removeClass(&quot;puck-disabled&quot;);
+	puck.allowAllCells();
+};
+
+/**
+* Removes the class style class to all pucks
+*
+* @method removeClassToAllPucks
+*/
+SampleChangerWidget.prototype.removeClassToAllPucks = function (className) {
+	var allPucks = this.getAllPucks();
+	for (puckIndex in allPucks) {
+		var puck = allPucks[puckIndex];
+		$(&quot;#&quot; + puck.puckWidget.id).removeClass(className);
 		puck.puckWidget.allowAllCells();
 	}
 };

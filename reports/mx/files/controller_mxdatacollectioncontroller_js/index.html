@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">125.61</p>
+      <p class="stat">122.49</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">83</p>
+      <p class="stat">118</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">14.77</p>
+      <p class="stat">27.14</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.71</p>
+      <p class="stat">1.26</p>
     </div>
   </div>
 </div>
@@ -102,6 +102,7 @@ function MxDataCollectionController() {
 MxDataCollectionController.prototype.setPageBackground = ExiGenericController.prototype.setPageBackground;
 MxDataCollectionController.prototype.notFound = ExiGenericController.prototype.notFound;
 
+
 /**
 * Inits the controller for the puck related objects
 * Paths accepted:
@@ -113,7 +114,7 @@ MxDataCollectionController.prototype.notFound = ExiGenericController.prototype.n
 MxDataCollectionController.prototype.init = function() {
 	var _this = this;
 	var listView;	
-
+    
 	Path.map(&quot;#/mx/datacollection/protein_acronym/:acronmys/main&quot;).to(function() {
 		var mainView = new DataCollectionMxMainView();
 		EXI.addMainPanel(mainView);
@@ -124,28 +125,46 @@ MxDataCollectionController.prototype.init = function() {
 		EXI.getDataAdapter({onSuccess : onSuccess}).mx.dataCollection.getByAcronymList(this.params[&#039;acronmys&#039;]);
 	}).enter(this.setPageBackground);
     
-	Path.map(&quot;#/mx/datacollection/session/:sessionId/main&quot;).to(function() {
-		var mainView = new DataCollectionMxMainView();
+	/** This URL is supposed to be included in automatic emails **/
+	Path.map(&quot;#/mx/proposal/:proposal/datacollection/session/:sessionId/main&quot;).to(function() {			
+		var redirection = &quot;#/mx/datacollection/session/&quot; + this.params[&#039;sessionId&#039;] +&quot;/main&quot;;				
+		/** Are we logged in yet? */
+		if (EXI.credentialManager.getConnections().length &gt; 0){			
+			ExiGenericController.prototype.redirect( this.params[&#039;proposal&#039;], redirection);
+		}
+		else{			
+			ExiGenericController.prototype.authenticateAndRedirect(this.params[&#039;proposal&#039;], redirection);
+		}
+
+	}).enter(this.setPageBackground);
+
+
+	Path.map(&quot;#/mx/datacollection/session/:sessionId/main&quot;).to(function() {		
+		var mainView = new DataCollectionMxMainView({sessionId : this.params[&#039;sessionId&#039;]});
 		EXI.addMainPanel(mainView);
         EXI.hideNavigationPanel();
 		EXI.setLoadingMainPanel(true);
-		var onSuccess = function(sender, data){            
+		var onSuccessProposal = function (sender,proposal) {
+			if (proposal &amp;&amp; proposal.length &gt; 0) {
+				mainView.loadProposal(proposal[0]);
+			}
+		}
+		EXI.getDataAdapter({onSuccess : onSuccessProposal}).proposal.proposal.getProposalBySessionId(this.params[&#039;sessionId&#039;]);
+
+		var onSuccess = function(sender, data){			
 		    mainView.loadCollections(data);
-			EXI.setLoadingMainPanel(false);
+		    EXI.setLoadingMainPanel(false);
 		};
 		EXI.getDataAdapter({onSuccess : onSuccess}).mx.dataCollection.getDataCollectionViewBySessionId(this.params[&#039;sessionId&#039;]);
 
-
 		var onSuccessEnergy = function(sender, data){
 			mainView.loadEnergyScans(data);
-			
 		};
 		/** retrieving energy scans */
 		EXI.getDataAdapter({onSuccess : onSuccessEnergy}).mx.energyscan.getEnergyScanListBySessionId(this.params[&#039;sessionId&#039;]);
 
 		var onSuccessXFE = function(sender, data){
 			mainView.loadFXEScans(data);
-			
 		};
 		/** retrieving XFE scans */
 		EXI.getDataAdapter({onSuccess : onSuccessXFE}).mx.xfescan.getXFEScanListBySessionId(this.params[&#039;sessionId&#039;]);
@@ -153,21 +172,30 @@ MxDataCollectionController.prototype.init = function() {
 	}).enter(this.setPageBackground);
 	
     
-    	Path.map(&quot;#/mx/datacollection/datacollectionid/:datacollectionid/main&quot;).to(function() {
-            //1507842
-		var mainView = new DataCollectionMxMainView();
-		EXI.addMainPanel(mainView);
-        EXI.hideNavigationPanel();
-		EXI.setLoadingMainPanel(true);
-		var onSuccess = function(sender, data){
-		    mainView.loadCollections(data);
-			EXI.setLoadingMainPanel(false);
-		};
-		EXI.getDataAdapter({onSuccess : onSuccess}).mx.dataCollection.getByDataCollectionId(this.params[&#039;datacollectionid&#039;]);
+
+ 	Path.map(&quot;#/mx/proposal/:proposal/datacollection/datacollectionid/:datacollectionid/main&quot;).to(function() {		
+		var redirection = &quot;#/mx/datacollection/datacollectionid/&quot; + this.params[&#039;datacollectionid&#039;] + &quot;/main&quot;;			
+		/** Are we logged in yet? */
+		if (EXI.credentialManager.getConnections().length &gt; 0){
+			ExiGenericController.prototype.redirect(this.params[&#039;proposal&#039;], redirection);			
+		}
+		else{			
+			ExiGenericController.prototype.authenticateAndRedirect(this.params[&#039;proposal&#039;], redirection);
+		}
+	}).enter(this.setPageBackground);
 
 
+    Path.map(&quot;#/mx/datacollection/datacollectionid/:datacollectionid/main&quot;).to(function() {		
 		
-        
+			var mainView = new DataCollectionMxMainView();
+			EXI.addMainPanel(mainView);
+			EXI.hideNavigationPanel();
+			EXI.setLoadingMainPanel(true);
+			var onSuccess = function(sender, data){				
+				mainView.loadCollections(data);
+				EXI.setLoadingMainPanel(false);
+			};
+			EXI.getDataAdapter({onSuccess : onSuccess}).mx.dataCollection.getByDataCollectionId(this.params[&#039;datacollectionid&#039;]);
 	}).enter(this.setPageBackground);
     
     
@@ -176,6 +204,13 @@ MxDataCollectionController.prototype.init = function() {
         EXI.hideNavigationPanel();
 		EXI.addMainPanel(mainView);
 		mainView.load(this.params[&#039;imageId&#039;], this.params[&#039;dataCollectionId&#039;]);
+	}).enter(this.setPageBackground);
+
+	Path.map(&quot;#/mx/datacollectiongroup/:dataCollectionGroupId/step/:step/main&quot;).to(function() {
+		var mainView = new PhasingGridMainView();
+        EXI.hideNavigationPanel();
+		EXI.addMainPanel(mainView);
+		mainView.load(this.params[&#039;dataCollectionGroupId&#039;], this.params[&#039;step&#039;]);
 	}).enter(this.setPageBackground);
 };</textarea>
   </div>

@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">99.39</p>
+      <p class="stat">99.15</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">344</p>
+      <p class="stat">410</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">88.00</p>
+      <p class="stat">97.05</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">4.23</p>
+      <p class="stat">5.05</p>
     </div>
   </div>
 </div>
@@ -103,11 +103,12 @@ function PuckWidget(args){
 	this.containerId = 0;
 	this.containerCode = &quot;&quot;;
 	this.enableMouseOver = false;
-	this.enableClick = false;
+	this.enableClick = false; //click on cells
+	this.enableMainClick = false; //click on the puck
+	this.enableMainMouseOver = false; //mouse over on the puck
 	this.initSelected = {};
 	this.isLoading = true;
 	this.capacity = 10;
-	
 	this.isUnipuck = false;
 	this.isEmpty = true;
 	
@@ -133,6 +134,12 @@ function PuckWidget(args){
 		if (args.enableClick != null){
 			this.enableClick = args.enableClick;
 		}
+		if (args.enableMainClick != null){
+			this.enableMainClick = args.enableMainClick;
+		}
+		if (args.enableMainMouseOver != null){
+			this.enableMainMouseOver = args.enableMainMouseOver;
+		}
 		if (args.initSelected){
 			this.initSelected = args.initSelected;
 		}
@@ -154,6 +161,7 @@ function PuckWidget(args){
 				containerId : this.containerId,
 				containerCode : this.containerCode,
 				enableClick : this.enableClick,
+				enableMainClick : this.enableMainClick,
 				enableMouseOver : this.enableMouseOver,
 				dataCollectionIds : this.dataCollectionIds,
 				isLoading : this.isLoading
@@ -201,7 +209,11 @@ PuckWidget.prototype.getPanel = function () {
 		html = out;
 	});
 	
-	return html;
+	return {
+				html : html,
+				width : 2*this.data.mainRadius + 1,
+				height : 2*this.data.mainRadius + 1
+			};
 };
 
 /**
@@ -232,12 +244,15 @@ PuckWidget.prototype.loadSamples = function (samples, selectedLocation) {
 		var sample = samples[i];
 		var dataCollectionIds = this.dataCollectionIds[sample.BLSample_location];
 		var state = &quot;FILLED&quot;;
-		if (dataCollectionIds != null &amp;&amp; dataCollectionIds.length &gt; 0){
+		if ((dataCollectionIds != null &amp;&amp; dataCollectionIds.length &gt; 0 || sample.DataCollectionGroup_dataCollectionGroupId != null)){
 			state = &quot;COLLECTED&quot;;
 		}
 		var selected = false;
 		if (selectedLocation != null){
 			selected = sample.BLSample_location == selectedLocation;
+		}
+		if (sample.BLSample_location == &quot;&quot;) {
+			sample.hasError = true;
 		}
 		
 		// Parse data
@@ -250,7 +265,8 @@ PuckWidget.prototype.loadSamples = function (samples, selectedLocation) {
 			protein_name : sample.Protein_name,
 			dataCollectionIds : dataCollectionIds,
 			containerId : sample.Container_containerId,
-			containerCode : sample.Container_code
+			containerCode : sample.Container_code,
+			hasError : sample.hasError
 		});
 	}
 	this.load(cells);
@@ -268,16 +284,26 @@ PuckWidget.prototype.load = function (data) {
 
 	for (sampleIndex in data){
 		var sample = data[sampleIndex];
-		var id = this.id + &quot;-&quot; + sample.location;
-		var cellIndex = this.findCellIndexById(id);
-		this.data.cells[cellIndex].state = sample.state;
-		this.data.cells[cellIndex].selected = sample.selected;
-		this.data.cells[cellIndex].sample_name = sample.sample_name;
-		this.data.cells[cellIndex].protein_acronym = sample.protein_acronym;
-		this.data.cells[cellIndex].protein_name = sample.protein_name;
-		this.data.cells[cellIndex].containerId = sample.containerId;
-		this.data.cells[cellIndex].containerCode = sample.containerCode;
-		if (sample.state != &quot;EMPTY&quot;){
+		if (!sample.hasError){
+			
+			var id = this.id + &quot;-&quot; + sample.location;
+			
+			var cellIndex = this.findCellIndexById(id);				
+			this.data.cells[cellIndex].state = sample.state;
+			this.data.cells[cellIndex].selected = sample.selected;
+			this.data.cells[cellIndex].sample_name = sample.sample_name;
+			this.data.cells[cellIndex].protein_acronym = sample.protein_acronym;
+			this.data.cells[cellIndex].protein_name = sample.protein_name;
+			this.data.cells[cellIndex].containerId = sample.containerId;
+			this.data.cells[cellIndex].containerCode = sample.containerCode;
+			if (sample.state != &quot;EMPTY&quot;){
+				this.containerId = sample.containerId;
+				this.containerCode = sample.containerCode;
+				this.data.containerId = this.containerId;
+				this.data.containerCode = this.containerCode;
+				this.isEmpty = false;
+			}
+		} else {
 			this.containerId = sample.containerId;
 			this.containerCode = sample.containerCode;
 			this.data.containerId = this.containerId;
@@ -294,24 +320,27 @@ PuckWidget.prototype.load = function (data) {
 				var cellIndex = _this.findCellIndexById(sender.target.id);
 				
 				_this.onMouseOver.notify(sender.target.id.split(&quot;-&quot;)[1]);
-				_this.focus(sender.target.id.split(&quot;-&quot;)[1],true);
+				_this.focusWell(sender.target.id.split(&quot;-&quot;)[1],true);
 				
 				// TOOLTIP
-				if (_this.data.cells[cellIndex].sample_name){
-	
+				if (_this.data.cells[cellIndex].protein_acronym){
+					var tooltipData = [{key : &quot;Protein acronym&quot;, value : _this.data.cells[cellIndex].protein_acronym}];
+					if (_this.data.cells[cellIndex].sample_name) {
+						tooltipData.push({key : &quot;Sample&quot;, value : _this.data.cells[cellIndex].sample_name});
+					}
 					var tooltipHtml = &quot;&quot;;
-					dust.render(&quot;plates.tooltip.mxdatacollectiongrid.template&quot;, _this.data.cells[cellIndex], function(err, out) {
+					dust.render(&quot;tooltip.template&quot;, tooltipData, function(err, out) {
 						tooltipHtml = out;
 					});
 					$(&#039;body&#039;).append(tooltipHtml);
 					$(&#039;#hoveringTooltipDiv&#039;).css({
-						&quot;top&quot; : $(this).offset().top - 3*_this.data.cells[i].radius,
-						&quot;left&quot; : $(this).offset().left + 1.5*_this.data.cells[i].radius
+						&quot;top&quot; : $(this).offset().top - 3*_this.data.cells[cellIndex].radius,
+						&quot;left&quot; : $(this).offset().left + 1.5*_this.data.cells[cellIndex].radius
 					});
 					if (_this.data.cells[cellIndex].y - _this.data.mainRadius &lt; 0) {
 						$(&#039;#hoveringTooltipDiv&#039;).css({
-							&quot;top&quot; : $(this).offset().top + 2*_this.data.cells[i].radius,
-							&quot;left&quot; : $(this).offset().left + _this.data.cells[i].radius
+							&quot;top&quot; : $(this).offset().top + 2*_this.data.cells[cellIndex].radius,
+							&quot;left&quot; : $(this).offset().left + _this.data.cells[cellIndex].radius
 						});
 					}
 				}
@@ -320,7 +349,7 @@ PuckWidget.prototype.load = function (data) {
 			
 			$(&quot;#&quot; + currentId).unbind(&#039;mouseout&#039;).mouseout(function(sender){
 				_this.onMouseOut.notify();
-				_this.focus(sender.target.id.split(&quot;-&quot;)[1],false);
+				_this.focusWell(sender.target.id.split(&quot;-&quot;)[1],false);
 
 				// TOOLTIP
 				$(&#039;#hoveringTooltipDiv&#039;).remove();
@@ -343,13 +372,27 @@ PuckWidget.prototype.load = function (data) {
 };
 
 /**
-* Focus or unfocus one cell according to a boolean and its location 
+* focus or unfocus the puck
 *
 * @method focus
+* @param {Boolean} bool Whether or not to focus the cell
+*/
+PuckWidget.prototype.focus = function (bool) {
+	if (bool){
+		$(&quot;#&quot; + this.id).addClass(&quot;puck-selected&quot;);		
+	} else {
+		$(&quot;#&quot; + this.id).removeClass(&quot;puck-selected&quot;);	
+	}
+};
+
+/**
+* focus or unfocus one cell according to a boolean and its location 
+*
+* @method focusWell
 * @param {Integer} location The location of the cell on the puck
 * @param {Boolean} bool Whether or not to focus the cell
 */
-PuckWidget.prototype.focus = function (location, bool) {
+PuckWidget.prototype.focusWell = function (location, bool) {
 	if (bool){
 		$(&quot;#&quot; + this.id + &quot;-&quot; + location).attr(&quot;class&quot;, &quot;cell_focus&quot;);
 		$(&quot;#&quot; + this.id + &quot;-&quot; + location + &quot;-inner&quot;).attr(&quot;class&quot;, &quot;cell_inner_hidden&quot;);		
@@ -415,6 +458,20 @@ PuckWidget.prototype.findCellIndexById = function (id) {
 };
 
 /**
+* Adds the class to each cell
+*
+* @method addClassToCells
+* @param cls The class to add
+* @return
+*/
+PuckWidget.prototype.addClassToCells = function (cls) {
+	for (var i = 0 ; i &lt; this.data.cells.length ; i++) {
+		var cell = this.data.cells[i];
+		$(&quot;#&quot; + cell.id).addClass(cls);
+	}
+};
+
+/**
 * Adds the disabled class to each cell
 *
 * @method disableAllCells
@@ -438,7 +495,16 @@ PuckWidget.prototype.allowAllCells = function () {
 		var cell = this.data.cells[i];
 		$(&quot;#&quot; + cell.id).removeClass(&quot;cell-disabled&quot;);
 	}
-};</textarea>
+};
+
+/**
+* It blinks the sample changer by fading IN and OUT
+*
+* @method blink` 
+*/
+PuckWidget.prototype.blink = function () {
+    $(&#039;#&#039; + this.id + &quot;-div&quot;).fadeIn().fadeOut().fadeIn();
+}</textarea>
   </div>
 </div>
 

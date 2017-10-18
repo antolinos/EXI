@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">107.79</p>
+      <p class="stat">101.71</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">33</p>
+      <p class="stat">256</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">18.10</p>
+      <p class="stat">72.51</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">0.25</p>
+      <p class="stat">2.19</p>
     </div>
   </div>
 </div>
@@ -89,39 +89,262 @@
 
 <div class="container">
   <div class="row">
-    <textarea id="file-source" class="col-md-12">dust.helpers.decimal = function(chunk, context, bodies, params) {
-      
-        if (params.key){            
-            var value = context.current()[params.key];
-            if (value){
-                if (params.decimals != null){
-                    try{
-                         chunk.write(Number(value).toFixed(params.decimals));
-                    }
-                    catch(e){
-                        
-                        /** There was an error, we leave same value */
-                        chunk.write(context.current()[params.key]);    
-                    }
+    <textarea id="file-source" class="col-md-12">dust.helpers.decimal = function(chunk, context, bodies, params) {   
+    if (params.key){
+        var value = context.current()[params.key];
+        if (params.key.split(&quot;.&quot;).length &gt; 1) {
+            var keys = params.key.split(&quot;.&quot;);
+            value = context.current()[keys[0]][keys[1]];
+        }
+        
+        if (value != null){
+            if (params.decimals != null){
+                try{
+                        if (params.intIfPossible){
+                            if (parseInt(Number(value)) == Number(value)) {
+                                chunk.write(parseInt(Number(value)));
+                            } else {
+                                chunk.write(Number(value).toFixed(params.decimals));
+                            }
+                        } else {
+                            chunk.write(Number(value).toFixed(params.decimals));
+                        }
                 }
-                else{
-                    /** No decimals then same value */
-                    chunk.write(context.current()[params.key]);
+                catch(e){
+                    
+                    /** There was an error, we leave same value */
+                    chunk.write(context.current()[params.key]);    
                 }
             }
-         
+            else{
+                /** No decimals then same value */
+                chunk.write(context.current()[params.key]);
+            }
         }
-        else{
-            chunk.write(&#039;WARN: NO KEY SET&#039;);
-        }
-         return chunk;
-        
+    }
+    else{
+        chunk.write(&#039;WARN: NO KEY SET&#039;);
+    }
+    return chunk;
 };
+
+dust.helpers.multiply = function(chunk, context, bodies, params) {
+    if (params.key){
+        
+        var value = context.current()[params.key];
+        if (params.key.split(&quot;.&quot;).length &gt; 1) {
+            var keys = params.key.split(&quot;.&quot;);
+            value = context.current()[keys[0]][keys[1]];
+        }
+        if (value){
+            if (params.parameter != null){
+                try{
+                        if (params.intIfPossible){
+                            if (parseInt(Number(value)) == Number(value)) {
+                                chunk.write(parseInt(Number(value)*params.parameter));
+                            } else {
+                                chunk.write(Number(value)*params.parameter);
+                            }
+                        } else {
+                            chunk.write(Number(value)*params.parameter);
+                        }
+                }
+                catch(e){
+                    
+                    /** There was an error, we leave same value */
+                    chunk.write(context.current()[params.key]);    
+                }
+            }
+            else{
+                /** No decimals then same value */
+                chunk.write(context.current()[params.key]);
+            }
+        }
+    }
+    else{
+        chunk.write(&#039;WARN: NO KEY SET&#039;);
+    }
+    return chunk;
+};
+
+
+dust.helpers.trim = function (chunk, context, bodies, params) {
+    if (params.key) {
+        var value = context.current()[params.key];
+        if (value){
+            if (value.trim() != &quot;&quot;) {
+                chunk.write(value);
+            }
+        }
+    }
+    else{
+        chunk.write(&#039;WARN: NO KEY SET&#039;);
+    }
+    return chunk;
+}
 
 dust.helpers.sizeOf = function(chunk, context, bodies, params) {
   var value = this.size(chunk, context, bodies, params);
   return (bodies &amp;&amp; bodies.block) ? chunk.render(bodies.block, context.push({ isSelect: true, isResolved: false, selectKey: value })) : value;
-};</textarea>
+};
+
+dust.helpers.exponential = function(chunk, context, bodies, params) {
+    if (params.key){            
+        var value = context.current()[params.key];
+        if (value){
+            if (params.decimals != null){
+                try{
+                        chunk.write(Number(Number(value).toFixed(params.decimals)).toExponential());
+                }
+                catch(e){
+                    
+                    /** There was an error, we leave same value */
+                    chunk.write(context.current()[params.key]);    
+                }
+            }
+            else{
+                /** No decimals then same value */
+                chunk.write(context.current()[params.key]);
+            }
+        }
+        
+    }
+    else{
+        chunk.write(&#039;WARN: NO KEY SET&#039;);
+    }
+        return chunk;
+    
+};
+
+dust.helpers.mmVolTest = function(chunk, context, bodies, params) {      
+    var value = context.current()[&quot;Subtraction_volume&quot;];
+    if (value){
+        try{
+                chunk.write(Number(value / 2).toFixed(1) + &quot; - &quot; + Number(value / 1.5).toFixed(1));
+        }
+        catch(e){
+            
+            /** There was an error, we leave same value */
+            chunk.write(context.current()[params.key]);    
+        }
+    }
+    return chunk;
+    
+};
+
+
+dust.helpers.framesColor = function(chunk, context, bodies, params) {          
+    var merge = context.current()[&quot;Merge_framesMerge&quot;];
+    var count = context.current()[&quot;Merge_framesCount&quot;];
+    var color = &quot;undefined&quot;;
+    if (merge == null || count == null) {
+        color = &quot;orange&quot;;
+    } else {
+        if (merge/count &gt;= 0.3) {
+            color = &quot;orange&quot;;
+        }
+        if (merge/count &gt;= 0.7) {
+            color = &quot;undefined&quot;;
+        }
+        if (merge/count &lt; 0.3) {
+            color = &quot;red&quot;
+        }
+    }
+    try{
+            chunk.write(color);
+    }
+    catch(e){
+        
+        /** There was an error, we leave same value */
+        chunk.write(context.current()[params.key]);    
+    }
+    return chunk;
+    
+};
+
+dust.helpers.fileName = function (chunk, context, bodies, params) {
+    var filePath = context.current()[&quot;filePath&quot;];
+    if (filePath) {
+        try{
+            var withExtension = filePath.substring(filePath.lastIndexOf(&#039;/&#039;)+1);
+            chunk.write(withExtension.substring(0,withExtension.indexOf(&quot;.&quot;)));
+        }
+        catch(e){
+            /** There was an error, we leave same value */
+            chunk.write(context.current()[params.key]);    
+        }
+    }
+    return chunk;
+}
+
+dust.helpers.formatDate = function (chunk, context, bodies, params) {
+    if (params.date) {
+        if (params.date){
+            if (params.format != null) {
+                try {
+                    formatted = moment(new Date(params.date)).format(params.format);
+                    chunk.write(formatted);
+                } catch (e) {
+                    chunk.write(params.date);
+                }
+            } else {
+                chunk.write(params.date);
+            }
+        }
+    }
+    return chunk;
+}
+
+dust.helpers.uppercase = function (chunk, context, bodies, params) {
+    if (params.key) {
+        var value = context.current()[params.key];
+        if (value){
+            chunk.write(value.toUpperCase());
+        }
+    }
+    else{
+        chunk.write(&#039;WARN: NO KEY SET&#039;);
+    }
+    return chunk;
+}
+
+dust.helpers.wavelengthToEnergy = function (chunk, context, bodies, params) {
+    if (params.key) {        
+        var value = context.current()[params.key];
+        if (value){
+            chunk.write((Number(12.398/value).toFixed(3))); 
+        }
+        else{
+            chunk.write(&#039;NA&#039;);    
+        }
+    }
+    else{
+        chunk.write(&#039;NA&#039;);
+    }
+    return chunk;
+}
+
+
+dust.helpers.getIndexByCommaSeparator = function (chunk, context, bodies, params) {
+    if (params.key) {        
+        var value = context.current()[params.key];
+        if (value){
+            if (params.decimals){
+                chunk.write(Number(value.split(&quot;,&quot;)[params.index]).toFixed(params.decimals));
+            }
+            else{
+                chunk.write(value.split(&quot;,&quot;)[params.index]); 
+            }
+        }
+        else{
+            chunk.write(&#039;NA&#039;);    
+        }
+    }
+    else{
+        chunk.write(&#039;NA&#039;);
+    }
+    return chunk;
+}</textarea>
   </div>
 </div>
 

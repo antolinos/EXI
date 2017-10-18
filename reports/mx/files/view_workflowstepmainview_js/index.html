@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">108.98</p>
+      <p class="stat">109.57</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">116</p>
+      <p class="stat">157</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">26.93</p>
+      <p class="stat">32.33</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.06</p>
+      <p class="stat">1.52</p>
     </div>
   </div>
 </div>
@@ -91,8 +91,7 @@
   <div class="row">
     <textarea id="file-source" class="col-md-12">function WorkflowStepMainView() {
 	this.icon = &#039;images/icon/ic_satellite_black_18dp.png&#039;;
-	MainView.call(this);
-	
+	MainView.call(this);	
 	var _this = this;
 	
 }
@@ -114,6 +113,9 @@ WorkflowStepMainView.prototype.getContainer = function() {
 	return this.mainPanel;
 };
 
+WorkflowStepMainView.prototype.onBoxReady = function() {
+	
+};
 
 WorkflowStepMainView.prototype.getGrid = function(title, columns, data) {
 	var store = Ext.create(&#039;Ext.data.Store&#039;, {
@@ -124,7 +126,7 @@ WorkflowStepMainView.prototype.getGrid = function(title, columns, data) {
     for (var i = 0; i &lt; columns.length; i++) {
          gridColumns.push({ text: columns[i],  dataIndex: columns[i], flex: 1 });
     }
-    return Ext.create(&#039;Ext.grid.Panel&#039;, {
+    var panel = Ext.create(&#039;Ext.grid.Panel&#039;, {
         title: title,
         flex : 1,
         margin : &#039;10 180 10 10&#039;,
@@ -132,28 +134,39 @@ WorkflowStepMainView.prototype.getGrid = function(title, columns, data) {
         store: store,
         columns: gridColumns
     });
+    
+    panel.on(&#039;boxready&#039;, function() {
+        
+    });
+    
+    return panel;
 };
 
 WorkflowStepMainView.prototype.getImageResolution = function(imageItem) {  
-    if (imageItem.xsize){
+    if (!imageItem.thumbnailValue) {
+        imageItem.thumbnailValue = imageItem.value;
+    }
+    if (!imageItem.thumbnailXsize) {
         var ratio = imageItem.xsize/1024;
-        imageItem.xsize = imageItem.xsize*ratio;
-        imageItem.ysize = imageItem.ysize*ratio;
+        imageItem.thumbnailXsize = imageItem.xsize*ratio;
+        imageItem.thumbnailYsize = imageItem.ysize*ratio;
     }
     return imageItem;
 };
 
 WorkflowStepMainView.prototype.getImagesResolution = function(imageItems) {  
-    var resolution = 1024;
-   
+    var resolution = 1024;   
     resolution = resolution/imageItems.length;
     for (var i = 0; i &lt; imageItems.length; i++) {
         var imageItem = imageItems[i];        
-         if (imageItem.xsize){
-            var ratio = resolution/imageItem.xsize;
-            imageItem.xsize = imageItem.xsize*ratio;
-            imageItem.ysize = imageItem.ysize*ratio;
-        } 
+        if (!imageItem.thumbnailValue) {
+           imageItem.thumbnailValue = imageItem.value;
+        }
+        if (!imageItem.thumbnailXsize) {
+           var ratio = resolution/imageItem.xsize;
+           imageItem.thumbnailXsize = imageItem.xsize*ratio;
+           imageItem.thumbnailYsize = imageItem.ysize*ratio;
+        }
     }
     return imageItems;
 };
@@ -167,35 +180,63 @@ WorkflowStepMainView.prototype.load = function(workflowStep) {
     function onSuccess(sender, data){    
    
         var items = JSON.parse(data).items;
+        _this.items = items;
         _this.panel.setTitle(JSON.parse(data).title);
         
-        var insertContainer = function(err, out){    
-                
-                    _this.mainPanel.insert({
-                            padding : 2,
-                           
-                            html : out
-                    });
+        var insertContainer = function(err, out){                    
+                _this.mainPanel.insert({
+                        padding : 2,
+                        html : out
+                });
         };
         
         for (var i = 0; i &lt; items.length; i++) {
             console.log(items[i]);
-            if (items[i].type == &quot;table&quot;){
-                  _this.mainPanel.insert(_this.getGrid(items[i].title,items[i].columns, items[i].data));
-            }
-            else{
-                if (items[i].type == &quot;image&quot;){
-                    
+            var events = [];
+            switch(items[i].type) {
+                case &quot;table&quot;:
+                    //_this.mainPanel.insert(_this.getGrid(items[i].title,items[i].columns, items[i].data));
+                    //continue;                    
+                case &quot;image&quot;:
                     items[i] = _this.getImageResolution(items[i]);
-                }
-                
-                 if (items[i].type == &quot;images&quot;){
-                     
-                    items[i].items = _this.getImagesResolution(items[i].items);
+                    break;
+                case &quot;images&quot;:
+                    items[i].items = _this.getImagesResolution(items[i].items);  
+                    break;
+                 case &quot;logFile&quot;:
+                    items[i].id = BUI.id(); 
+                    events.push(function(){
+                        $( &quot;#&quot; + items[i].id ).click(function() {
+                            var item = _.find(_this.items, {id:this.id});
+                            var filename = item.title.replace(/\s/g, &quot;&quot;); + &quot;.log&quot;;
+                            var text = item.logText;
+                            var pom = document.createElement(&#039;a&#039;);
+                            pom.setAttribute(&#039;href&#039;, &#039;data:text/plain;charset=utf-8,&#039; + encodeURIComponent(text));
+                            pom.setAttribute(&#039;download&#039;, filename);
+
+                            if (document.createEvent) {
+                                var event = document.createEvent(&#039;MouseEvents&#039;);
+                                event.initEvent(&#039;click&#039;, true, true);
+                                pom.dispatchEvent(event);
+                            }
+                            else {
+                                pom.click();
+                            }
+                            
+                            
+                            
+                            
+                        });       
+                    }); 
+                    break;
+                default:
                    
-                }
-               
-                dust.render(&quot;workflowmainview.template&quot;, items[i], insertContainer);
+            }
+            
+            dust.render(&quot;workflowmainview.template&quot;, items[i], insertContainer);
+            
+            for(var j =0; j&lt; events.length; j++){
+                events[j]();
             }
         }
       

@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">94.76</p>
+      <p class="stat">116.57</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">256</p>
+      <p class="stat">147</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">31.65</p>
+      <p class="stat">25.28</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">2.34</p>
+      <p class="stat">1.62</p>
     </div>
   </div>
 </div>
@@ -98,6 +98,7 @@
 function ShipmentForm(args) {
 	this.id = BUI.id();
 	this.width = 600;
+	this.padding = 10;
 
 	if (args != null) {
 		if (args.creationMode != null) {
@@ -107,250 +108,140 @@ function ShipmentForm(args) {
 			this.width = args.width;
 		}
 	}
-	
-	this.onSaved = new Event(this);
-}
 
-ShipmentForm.prototype.fillStores = function() {
-	this.panel.setLoading(&quot;Loading Labcontacts from database&quot;);
-	var labContacts = EXI.proposalManager.getLabcontacts();
+	var _this = this;
 
-	this.labContactForSendingStore.loadData(labContacts, false);
-
-	labContacts.sort(function(a, b){
-	    if(a.cardName &lt; b.cardName) {return -1;}
-	    if(a.cardName &gt; b.cardName) {return 1;}
-	    return 0;
+	this.dewarTrackingView = new DewarTrackingView();
+	this.dewarTrackingView.onLoaded.attach(function(sender){
+		_this.panel.doLayout();
 	});
 	
-	$.extend(labContacts, [{ cardName : &#039;Same as for shipping to beamline&#039;, labContactId : -1}, { cardName : &#039;No return requested&#039;, labContactId : 0}]);
-	this.labContactForReturnStore.loadData(labContacts, false);
+	this.onSaved = new Event(this);
+	this.refresh = new Event(this);
+}
 
-	this.labContactsReturnCombo.setValue(-1);
-
-	this.panel.setLoading(false);
-	if (this.shipment != null) {
-		this.setShipment(this.shipment);
-	}
-};
-
-ShipmentForm.prototype.draw = function(targetId) {
-	this.getPanel().render(targetId);
-};
-
-ShipmentForm.prototype.load = function(shipment) {
+ShipmentForm.prototype.load = function(shipment,hasExportedData) {
+	var _this = this;
 	this.shipment = shipment;
-	var _this = this;
-	Ext.getCmp(_this.id + &quot;shippingName&quot;).setValue(shipment.shippingName);
-	Ext.getCmp(_this.id + &quot;comments&quot;).setValue(shipment.comments);
-	if (shipment.sendingLabContactVO != null) {
-		this.labContactsSendingCombo.setValue(shipment.sendingLabContactVO.labContactId);
-	}
+	this.hasExportedData = hasExportedData;
+	var toData = EXI.proposalManager.getLabcontacts();
+	var fromData = $.extend(EXI.proposalManager.getLabcontacts(), [{ cardName : &#039;Same as for shipping to beamline&#039;, labContactId : -1}, { cardName : &#039;No return requested&#039;, labContactId : 0}]);
 
-	
-	if (shipment.returnLabContactVO == null) {
-		this.labContactsReturnCombo.setValue(0);
-	}
-	else{
-		if (shipment.returnLabContactVO.labContactId == shipment.sendingLabContactVO.labContactId){
-			this.labContactsReturnCombo.setValue(-1);
-		}
-		else{
-			this.labContactsReturnCombo.setValue(shipment.returnLabContactVO.labContactId);
-		}
-	}
-	
-	if (shipment.sessions != null){
+    var html = &quot;&quot;;
+	var beamlineName = &quot;&quot;;
+	var startDate = &quot;&quot;;
+	if (shipment){
 		if (shipment.sessions.length &gt; 0){
-			var session = shipment.sessions[0];
-			this.sessionComboBox.setValue(session.sessionId);
+			beamlineName = shipment.sessions[0].beamlineName;
+			startDate = moment(shipment.sessions[0].startDate).format(&quot;DD/MM/YYYY&quot;);
 		}
 	}
+	
+    dust.render(&quot;shipping.form.template&quot;, {id : this.id, to : toData, from : fromData, beamlineName : beamlineName, startDate : startDate, shipment : shipment}, function(err, out){
+		html = out;
+	});
+	
+    $(&#039;#&#039; + _this.id).hide().html(html).fadeIn(&#039;fast&#039;);
+	if (shipment == null || shipment.shippingStatus != &quot;processing&quot;){
+		$(&quot;#&quot; + _this.id + &quot;-edit-button&quot;).prop(&#039;disabled&#039;,false);
+		$(&quot;#&quot; + _this.id + &quot;-edit-button&quot;).unbind(&#039;click&#039;).click(function(sender){
+			_this.edit();
+		});
+	
+	}
 
+	$(&quot;#&quot; + _this.id + &quot;-send-button&quot;).unbind(&#039;click&#039;).click(function(sender){
+			_this.updateStatus(_this.shipment.shippingId, &quot;Sent_to_ESRF&quot;);
+	});
+
+
+	$(&quot;#transport-history-&quot; + this.id).html(this.dewarTrackingView.getPanel());
+	this.panel.doLayout();
+	this.attachCallBackAfterRender();
 };
 
-ShipmentForm.prototype._saveShipment = function() {
-	var _this = this;
-	var shippingId = null;
-	
-	if (this.shipment != null) {
-		shippingId = this.shipment.shippingId;
-	}
-	
-	var sendingAddressId = this.labContactsSendingCombo.getValue();
-	var returnAddressId = this.labContactsReturnCombo.getValue();
-	
-	if (sendingAddressId == null) {
-		BUI.showError(&quot;User contact information for shipping to beamline is mandatory&quot;);
-		return;
-	}
-
-		
-	/** No return requested **/
-	if (this.labContactsReturnCombo.getValue() == 0){
-		returnAddressId = 0;
-	}
-	
-	/** Same sender **/
-	if (this.labContactsReturnCombo.getValue() == -1){
-		returnAddressId = -1;
-	}
-
-	var sendingAddress = (EXI.proposalManager.getLabcontactById(sendingAddressId));
-	var json = {
-		shippingId : shippingId,
-		name : Ext.getCmp(_this.id + &quot;shippingName&quot;).getValue(),
-		status : &quot;Not set&quot;,
-		sendingLabContactId : sendingAddressId,
-		returnLabContactId : returnAddressId, 
-		returnCourier : returnAddressId,
-		courierAccount : sendingAddress.courierAccount,
-		billingReference : sendingAddress.billingReference,
-		dewarAvgCustomsValue : sendingAddress.dewarAvgCustomsValue,
-		dewarAvgTransportValue :sendingAddress.dewarAvgTransportValue,
-		comments : Ext.getCmp(_this.id + &quot;comments&quot;).getValue(),
-		sessionId : this.sessionComboBox.getValue()
-	};
-
-	var onSuccess = function(sender, shipment) {
-		location.hash = &quot;#/shipping/&quot; + shipment.shippingId + &quot;/main&quot;;
-		_this.panel.setLoading(false);
-		_this.onSaved.notify(shipment);
-	};
-
-
-	/** Cheking params **/
-	if (json.name == &quot;&quot;) {
-		BUI.showError(&quot;Name field is mandatory&quot;);
-		return;
-	}
-
-	if (json.sendingLabContactId == null) {
-		BUI.showError(&quot;Lab contact for sending field is mandatory&quot;);
-		return;
-	}
-
-	
-	this.panel.setLoading();
-	EXI.getDataAdapter({onSuccess : onSuccess}).proposal.shipping.saveShipment(json);
-	
-	
+ShipmentForm.prototype.updateStatus = function(shippingId, status) {
+    var _this = this;
+    //_this.panel.setLoading(&quot;Updating shipment Status&quot;);
+    var onStatusSuccess = function(sender, dewar) { 						
+			_this.refresh.notify(_this.shipment.shippingId);
+    };
+    var onError = function(data){
+            EXI.setError(data);
+    };
+    
+    EXI.getDataAdapter({onSuccess : onStatusSuccess, onError : onError}).proposal.shipping.updateStatus(shippingId,status);
 };
 
 ShipmentForm.prototype.getPanel = function() {
-	var _this = this;
-	var required = &#039;&lt;span style=&quot;color:red;font-weight:bold&quot; data-qtip=&quot;Required&quot;&gt;*&lt;/span&gt;&#039;;
-	var buttons = [];
 
-	if (_this.creationMode) {
-		buttons.push({
-			text : &#039;Create&#039;,
-			scope : this,
-			handler : function() {
-				_this._saveShipment();
-			}
-		});
-	} else {
-		buttons.push({
-			text : &#039;Save&#039;,
-			scope : this,
-			handler : function() {
-				_this._saveShipment();
-			}
-		});
+	this.panel = Ext.create(&quot;Ext.panel.Panel&quot;,{
+		layout : &#039;fit&#039;,
+		cls	: &#039;overflowed overflowed-cascade&#039;,
 
-	}
-
-	this.labContactForSendingStore = Ext.create(&#039;Ext.data.Store&#039;, {
-		fields : [ &#039;cardName&#039;, &#039;labContactId&#039; ],
-		sorters : &#039;cardName&#039;
+		items :	[{
+                    html : &#039;&lt;div id=&quot;&#039; + this.id + &#039;&quot;&gt;&lt;/div&gt;&#039;,
+                    autoScroll : false,
+					// margin : 10,
+					padding : this.padding,
+					width : this.width
+                }]
 	});
 
-	this.labContactForReturnStore = Ext.create(&#039;Ext.data.Store&#039;, {
-		fields : [ &#039;cardName&#039;, &#039;labContactId&#039; ]
-		
-	});
-
-	this.labContactsSendingCombo = Ext.create(&#039;Ext.form.ComboBox&#039;, {
-		id : _this.id + &quot;shipmentform_sendingLabContactId&quot;,
-		fieldLabel : &#039;Shipping Card to ESRF&#039;,
-		afterLabelTextTpl : required,
-		store : this.labContactForSendingStore,
-		queryMode : &#039;local&#039;,
-		labelWidth : 200,
-		width : 600,
-		margin : &#039;10 0 0 10&#039;,
-		displayField : &#039;cardName&#039;,
-		valueField : &#039;labContactId&#039;
-	});
-
-	this.labContactsReturnCombo = Ext.create(&#039;Ext.form.ComboBox&#039;, {
-		id : _this.id + &quot;returnLabContactId&quot;,
-		fieldLabel : &#039;Shipping Card to HOME&#039;,
-		afterLabelTextTpl : required,
-		store : this.labContactForReturnStore,
-		queryMode : &#039;local&#039;,
-		margin : &#039;10 0 0 10&#039;,
-		labelWidth : 200,
-		width : 600,
-		displayField : &#039;cardName&#039;,
-		valueField : &#039;labContactId&#039;
-	});
-
-	
-    this.sessionComboBox =  BIOSAXS_COMBOMANAGER.getComboSessions(EXI.proposalManager.getSessions(), {margin: &#039;10 0 0 10&#039;, width: 400, labelWidth: 200});
-
-	if (this.panel == null) {
-		this.panel = Ext.create(&#039;Ext.form.Panel&#039;, {
-			layout: &#039;hbox&#039;,
-			width : this.width,
-			margin : 10,
-			bodyPadding : 5,
-			cls : &#039;border-grid&#039;,
-			buttons : buttons,
-			items : [ 
-						{
-							xtype : &#039;container&#039;,
-							layout: &#039;vbox&#039;,
-							items: [
-										{
-												xtype : &#039;requiredtextfield&#039;,
-												fieldLabel : &#039;Name&#039;,
-												allowBlank : false,
-												labelWidth : 200,
-												width : 400,
-												margin : &quot;10 20 0 10&quot;,
-												name : &#039;shippingName&#039;,
-												id : _this.id + &#039;shippingName&#039;,
-												value : &#039;&#039;,
-										},
-										this.sessionComboBox
-							]
-						},
-					    {
-		    					xtype : &#039;textareafield&#039;,
-		    					name : &#039;comments&#039;,
-		    					id : _this.id + &#039;comments&#039;,
-		    					fieldLabel : &#039;Comments&#039;,
-		    					value : &#039;&#039;,
-		    					labelWidth : 200,
-		    					margin : &quot;10 20 0 10&quot;,
-		    					width : 500,
-						},
-						{
-							xtype : &#039;container&#039;,
-							layout: &#039;vbox&#039;,
-							items: [
-										this.labContactsSendingCombo,
-										this.labContactsReturnCombo
-							]
-						}
-		]
-		});
-	}
-	this.fillStores();
 	return this.panel;
-};</textarea>
+};
+
+ShipmentForm.prototype.edit = function(dewar) {
+	var _this = this;
+	var shippingEditForm = new ShipmentEditForm();
+	
+	shippingEditForm.onSaved.attach(function (sender, shipment) {
+		if (_this.shipment) {
+			_this.load(shipment);
+		} else {
+			_this.onSaved.notify(shipment);
+		}
+		window.close();
+	});
+
+	var window = Ext.create(&#039;Ext.window.Window&#039;, {
+		title : &#039;Shipment&#039;,
+		height : 450,
+		width : 600,
+		modal : true,
+		layout : &#039;fit&#039;,
+		items : [ shippingEditForm.getPanel() ],
+		buttons : [ {
+				text : &#039;Save&#039;,
+				handler : function() {
+					shippingEditForm.saveShipment();
+				}
+			}, {
+				text : &#039;Cancel&#039;,
+				handler : function() {
+					window.close();
+				}
+			} ]
+	}).show();
+
+	shippingEditForm.load(this.shipment);
+};
+
+ShipmentForm.prototype.attachCallBackAfterRender = function () {
+
+	var _this = this;
+	var tabsEvents = function(grid) {
+		this.grid = grid;
+		$(&#039;a[data-toggle=&quot;tab&quot;]&#039;).on(&#039;shown.bs.tab&#039;, function (e) {
+			var target = $(e.target).attr(&quot;href&quot;);
+			if (target.startsWith(&quot;#tr&quot;)){
+				_this.dewarTrackingView.load(_this.shipment);
+			}
+			_this.panel.doLayout();
+		});
+    };
+    var timer3 = setTimeout(tabsEvents, 500, this);
+}</textarea>
   </div>
 </div>
 

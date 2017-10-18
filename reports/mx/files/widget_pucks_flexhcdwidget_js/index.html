@@ -44,11 +44,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
-      <p class="stat">91.67</p>
+      <p class="stat">95.05</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
-      <p class="stat">114</p>
+      <p class="stat">129</p>
     </div>
   </div>
   <div class="row historical">
@@ -62,11 +62,11 @@
   <div class="row">
     <div class="col-md-6">
       <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
-      <p class="stat">65.85</p>
+      <p class="stat">64.89</p>
     </div>
     <div class="col-md-6">
       <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
-      <p class="stat">1.84</p>
+      <p class="stat">2.11</p>
     </div>
   </div>
 </div>
@@ -103,6 +103,7 @@ function FlexHCDWidget (args) {
 	this.sampleChangerCapacity = 24;
 	this.initAlpha = -7*2*Math.PI/16;
 	this.data = {
+        id : this.id,
 		radius : this.radius,
 		cells : 8,
 		lines : [],
@@ -110,10 +111,12 @@ function FlexHCDWidget (args) {
 	};
 	
 	this.createStructure();
-	this.createPucks(&quot;Unipuck&quot;, this.data.cells/2, -7*Math.PI/8, this.data.radius/2, 0.5, {dAlpha : Math.PI/16, dist : 3*this.data.radius/4});
-	this.createPucks(&quot;Spinepuck&quot;, this.data.cells/2, -5*Math.PI/8, this.data.radius/2, 0.5, {dAlpha : Math.PI/16, dist : 3*this.data.radius/4});
+	this.createPucks(&quot;Spinepuck&quot;, this.data.cells/2, -7*Math.PI/8, this.data.radius/2, 0.5, {dAlpha : Math.PI/16, dist : 3*this.data.radius/4});
+	this.createPucks(&quot;Unipuck&quot;, this.data.cells/2, -5*Math.PI/8, this.data.radius/2, 0.5, {dAlpha : Math.PI/16, dist : 3*this.data.radius/4});
 };
 
+
+FlexHCDWidget.prototype.blink = SampleChangerWidget.prototype.blink;
 FlexHCDWidget.prototype.getPuckIndexFromAngle = SampleChangerWidget.prototype.getPuckIndexFromAngle;
 FlexHCDWidget.prototype.createPucks = SampleChangerWidget.prototype.createPucks;
 FlexHCDWidget.prototype.getPanel = SampleChangerWidget.prototype.getPanel;
@@ -129,6 +132,11 @@ FlexHCDWidget.prototype.getPuckData = SampleChangerWidget.prototype.getPuckData;
 FlexHCDWidget.prototype.getAllFilledPucks = SampleChangerWidget.prototype.getAllFilledPucks;
 FlexHCDWidget.prototype.loadSamples = SampleChangerWidget.prototype.loadSamples;
 FlexHCDWidget.prototype.emptyAllPucks = SampleChangerWidget.prototype.emptyAllPucks;
+FlexHCDWidget.prototype.enableAllPucks = SampleChangerWidget.prototype.enableAllPucks;
+FlexHCDWidget.prototype.disablePuck = SampleChangerWidget.prototype.disablePuck;
+FlexHCDWidget.prototype.enablePuck = SampleChangerWidget.prototype.enablePuck;
+FlexHCDWidget.prototype.removeClassToAllPucks = SampleChangerWidget.prototype.removeClassToAllPucks;
+FlexHCDWidget.prototype.addClassToPuck = SampleChangerWidget.prototype.addClassToPuck;
 
 /**
 * Creates the particular structure of the FlexHCD
@@ -208,7 +216,14 @@ FlexHCDWidget.prototype.convertSampleChangerLocationToId = function (sampleChang
 	} else {
 		return null;
 	}
-};</textarea>
+};
+
+FlexHCDWidget.prototype.onRender = function () {
+	//Disable the 24th puck
+	var puck24 = this.findPuckById(this.id + &quot;-8-3&quot;);
+	this.addClassToPuck(puck24,&quot;puck-always-disabled&quot;);
+	puck24.addClassToCells(&quot;cell-always-disabled&quot;);
+}</textarea>
   </div>
 </div>
 
