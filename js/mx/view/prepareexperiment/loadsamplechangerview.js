@@ -258,12 +258,29 @@ LoadSampleChangerView.prototype.createSampleChangerWidget = function (sampleChan
         isLoading : false,
         beamlineName : beamlineName
     };
+    
     this.sampleChangerWidget = new FlexHCDWidget(data);
+    
     if (sampleChangerName == "SC3") {
         this.sampleChangerWidget = new SC3Widget(data);
-    } else if (sampleChangerName == "RoboDiff") {
+    } 
+    if (sampleChangerName == "RoboDiff") {
         this.sampleChangerWidget = new RoboDiffWidget(data);
     }
+
+    if (sampleChangerName == "FlexHCDDual") {        
+        this.sampleChangerWidget = new FlexHCDDualWidget(data);
+    }
+
+    if (sampleChangerName == "FlexHCDUnipuckPlate") {        
+        this.sampleChangerWidget = new FlexHCDUnipuckPlateWidget(data);
+    }
+
+    if (sampleChangerName == "RoboDiffHCDSC3") {                
+        this.sampleChangerWidget = new RoboDiffHCDSC3Widget(data);
+    }
+
+
 
     return this.sampleChangerWidget;
 };

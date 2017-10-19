@@ -12,7 +12,7 @@ function SampleChangerWidget (args) {
 	this.isLoading = true;
 	this.radius = 200;
 	this.name = '';
-	this.onPuckSelected = new Event(this);
+	
 	this.sampleChangerCapacity = 0; //This is set in each sample changer type
 	this.beamlineName = "";
 
@@ -28,6 +28,9 @@ function SampleChangerWidget (args) {
 			this.beamlineName = args.beamlineName;
 		}
 	}
+
+
+	this.onPuckSelected = new Event(this);
 };
 
 /**
@@ -47,7 +50,7 @@ SampleChangerWidget.prototype.blink = function () {
 * Create certain types of pucks following a circular path
 *
 * @method createPucks
-* @param {Integer} puckType The type of puck (1 is Uni, 2 is Spine)
+* @param {Integer} puckType The type of puck ("Unipuck", "Spinepuck", "Puck")
 * @param {Integer} n The number of pucks
 * @param {Double} initAlpha Initial angle where to start to add pucks
 * @param {Double} dist The distance to the center of the puck where the cells are positioned
@@ -57,7 +60,8 @@ SampleChangerWidget.prototype.blink = function () {
 SampleChangerWidget.prototype.createPucks = function (puckType, n, initAlpha, dist, marginPercent, args) {
 	var rad = dist*Math.sin((Math.PI/this.data.cells)*marginPercent);
 	this.pucks[puckType] = [];
-	for (var i = 0 ; Math.abs(i) < n ; i += this.clockwise) {
+
+	for (var i = 0 ; Math.abs(i) < n ; i += this.clockwise) {		
 		var ang = i*2*Math.PI/n;
 		var puckIndex = this.getPuckIndexFromAngle(this.initAlpha, 1, this.initAlpha + this.clockwise*(2*Math.PI*(1 - 1/this.data.cells)), this.data.cells, initAlpha + ang);		
 		var puckId = this.id + "-" + puckIndex + "-1";
@@ -190,7 +194,7 @@ SampleChangerWidget.prototype.loadSamples = function (samples, containerIdsMap) 
 * @method load
 * @param {Object} data Keys are the ids and the values are puckWidget data 
 */
-SampleChangerWidget.prototype.load = function (data) {
+SampleChangerWidget.prototype.load = function (data) {	
 	for (i in _.keys(data)){
 		var location = _.keys(data)[i].substring(_.keys(data)[i].indexOf('-')+1);
 		var puck = this.findPuckById(this.id + "-" + location);
@@ -212,6 +216,93 @@ SampleChangerWidget.prototype.getStructure = function (data) {
 	
 	return html;
 };
+
+SampleChangerWidget.prototype.createHCDStructure = function (data) {
+		for (var i = 0 ; i < this.data.cells/2 ; i++){
+		var ang = i*2*Math.PI/this.data.cells;
+		var line = {
+			x1 : this.data.radius*Math.sin(ang) + this.data.radius,
+			y1 : this.data.radius*Math.cos(ang) + this.data.radius,
+			x2 : -this.data.radius*Math.sin(ang) + this.data.radius,
+			y2 : -this.data.radius*Math.cos(ang) + this.data.radius
+		};
+		this.data.lines.push(line);
+	}
+
+	var textR = this.data.radius*0.31;
+	var textRBig = this.data.radius*0.94;
+	var dAlpha = Math.PI/16;
+	var currentNumber = 1;
+	var textSize = Math.round((15-7)*(this.data.radius-100)/(200-100) + 7);
+	for (var i = 0 ; i < this.data.cells ; i++){
+		var ang = i*2*Math.PI/this.data.cells;
+		this.data.text.push({
+			text : 1,
+			x : textRBig*Math.sin(this.initAlpha + ang - dAlpha) + this.data.radius,
+			y : -textRBig*Math.cos(this.initAlpha + ang - dAlpha) + this.data.radius,
+			textSize : textSize
+		});
+		currentNumber++;
+		this.data.text.push({
+			text : 2,
+			x : textRBig*Math.sin(this.initAlpha + ang + dAlpha) + this.data.radius,
+			y : -textRBig*Math.cos(this.initAlpha + ang + dAlpha) + this.data.radius,
+			textSize : textSize
+		});
+		currentNumber++;
+		this.data.text.push({
+			text : 3,
+			x : textR*Math.sin(this.initAlpha + ang) + this.data.radius,
+			y : -textR*Math.cos(this.initAlpha + ang) + this.data.radius,
+			textSize : textSize
+		});
+		currentNumber++;
+
+		/** Drawing the labels for cells */
+		if (!this.data.circle){ 
+			this.data.circle = [];
+		}
+		var r = 12;
+		
+		if (i == 0 || i == 1 || i == 4 || i ==5 ){
+			this.data.text.push({
+				text :  i + 1,
+				stroke : 'gray',
+				x : textRBig*Math.sin(this.initAlpha + ang + (dAlpha/2)) + this.data.radius,
+				y :  -textRBig*Math.cos(this.initAlpha + ang - (dAlpha/2)) + this.data.radius + r/2,
+				textSize : textSize
+			});
+
+			this.data.circle.push({		
+				cx : textRBig*Math.sin(this.initAlpha + ang + (dAlpha/2)) + this.data.radius,
+				cy :  -textRBig*Math.cos(this.initAlpha + ang - (dAlpha/2)) + this.data.radius,
+				stroke : 'gray',
+				"fill-opacity" : 0.2,
+				fill : 'white',
+				r : r
+			});
+		}
+		else{
+			this.data.text.push({
+				text :  i +1,
+				stroke : 'gray',
+				x : textRBig*Math.sin(this.initAlpha + ang- (dAlpha/2)) + this.data.radius,
+				y :  -textRBig*Math.cos(this.initAlpha + ang + (dAlpha/2)) + this.data.radius + r/2,
+				textSize : textSize
+			});
+
+			this.data.circle.push({		
+				cx : textRBig*Math.sin(this.initAlpha + ang - (dAlpha/2)) + this.data.radius,
+				cy :  -textRBig*Math.cos(this.initAlpha + ang + (dAlpha/2)) + this.data.radius,
+				stroke : 'gray',
+				"fill-opacity" : 0.2,
+				fill : 'white',
+				r : r
+			});
+		}
+	}
+};
+
 
 /**
 * Returns a certain puck given its id

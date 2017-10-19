@@ -26,8 +26,13 @@ function MeasurementGrid(args) {
 MeasurementGrid.prototype.load = function(dataCollections) {
 	dataCollections = _.orderBy(dataCollections, ['MeasurementToDataCollection_dataCollectionId', 'MeasurementToDataCollection_dataCollectionOrder'], ['desc', 'desc']);
 	_.map(dataCollections, function(o){ 
-											o.samplePlateLetter = BUI.getSamplePlateLetters()[o.SamplePlatePosition_rowNumber - 1];
+											o.samplePlateLetter = BUI.getSamplePlateLetters()[o.SamplePlatePosition_rowNumber - 1];										
+
 										});
+
+	
+	
+	
 	var html = "";
 	dust.render("measurement.grid.template", dataCollections, function(err, out) {                                                                                               
 		html = html + out;

@@ -327,7 +327,6 @@ PuckFormView.prototype.checkSampleNames = function(sampleNames, proteinIds, cont
 PuckFormView.prototype.save = function(returnToShipment) {	
 	var _this = this;
 
-
 	var puck = this.containerSpreadSheet.getPuck();
 
 	
@@ -392,6 +391,7 @@ PuckFormView.prototype.save = function(returnToShipment) {
 			}
 		};
 		this.panel.setLoading("Saving Puck");
+		
 		EXI.getDataAdapter({onSuccess : onSuccess, onError : onError}).proposal.shipping.saveContainer(this.containerId, this.containerId, this.containerId, puck);
 	} else {
 		_this.displaySpecialCharacterWarning(specialCharacter +  " contains special characters. Rows:  #" + specialCharacterRow);				

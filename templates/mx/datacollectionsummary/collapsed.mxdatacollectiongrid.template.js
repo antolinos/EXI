@@ -121,7 +121,7 @@
       <div class="col-xs-6 col-md-1">
         {@gt key=resultsCount   value="0"}
                 <a href='#/autoprocintegration/datacollection/{.DataCollection_dataCollectionId}/main' target="_blank" class="btn btn-xs">
-                        <span id="{.DataCollection_dataCollectionId}-autoproc-link" class="glyphicon glyphicon-eye-open autoproc-link"> Autoproc</span>
+                        <span id="{.DataCollection_dataCollectionId}-autoproc-link" class="glyphicon glyphicon-eye-open autoproc-link"> Autoprocessing</span>
                 </a>
         {/gt}
       </div>

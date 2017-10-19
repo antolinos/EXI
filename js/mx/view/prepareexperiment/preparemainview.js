@@ -248,13 +248,14 @@ PrepareMainView.prototype.load = function() {
                 if (beamline.length > 0) {
                     _this.loadSampleChangerView.createSampleChangerWidget(beamline[0].sampleChangerType,beamline[0].name);
                 } else {
-                    $.notify("Warning: Unknown beamline " + beamlinesSelected[0], "warn");
+                    
+                    //$.notify("Warning: Unknown beamline " + beamlinesSelected[0], "warn");
                     _this.loadSampleChangerView.createSampleChangerWidget("FlexHCD",beamlinesSelected[0]);
                 }
                 for (var i = 1 ; i < beamlinesSelected.length ; i++){
                     var beamline = _.filter(EXI.credentialManager.getBeamlinesByTechnique("MX"),{"name":beamlinesSelected[i]});
-                    if (beamline.length == 0) {
-                        $.notify("Warning: Unknown beamline " + beamlinesSelected[i], "warn");
+                    if (beamline.length == 0) {                        
+                        //$.notify("Warning: Unknown beamline " + beamlinesSelected[i], "warn");
                     }
                 }
             }

@@ -72,7 +72,10 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 dataIndex: 'shippingName',
                 type: 'text',
                 flex: 1,
-                readOnly: true
+                readOnly: true,
+                renderer : function(value, metaData, record, rowIndex){                    
+                    return "<a target='_blank' href='#/shipping/" + record.data.shippingId + "/main'>" + record.data.shippingName + "</a>";
+                }                
             },
              {
                 header: 'DewarId',
@@ -103,7 +106,12 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 dataIndex: 'parcelName',
                 type: 'text',
                 flex: 1,
-                readOnly: true
+                readOnly: true,
+                renderer : function(value, metaData, record, rowIndex){                    
+                    return "<a target='_blank' href='#/shipping/" + record.data.shippingId + "/processing/containerId/" + record.data.containerId + "/edit'>" + record.data.parcelName + "</a>";
+                }               
+
+                
             },
              {
                 header: 'Container',
@@ -183,12 +191,44 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 }
                 
             },
-            {
-                header: 'Sample Changer Location',
+             {
+                header: 'Cell',
                 dataIndex: 'sampleChangerLocation',
                 flex: 1,
                 type: 'text',
-                tdCls: 'scl-cell'
+                tdCls: 'scl-cell',
+                renderer : function(value, metaData, record, rowIndex){
+                    if (record.data.sampleChangerLocation){
+                        if (record.data.sampleChangerLocation != ""){
+                            return  Math.floor((record.data.sampleChangerLocation - 1) /3) +1 ;
+                            
+                        }
+                    }
+                    return record.data.sampleChangerLocation;
+                }
+            },   
+             {
+                header: 'Position',
+                dataIndex: 'sampleChangerLocation',
+                flex: 1,
+                type: 'text',
+                tdCls: 'scl-cell',
+                renderer : function(value, metaData, record, rowIndex){
+                    if (record.data.sampleChangerLocation){
+                        if (record.data.sampleChangerLocation != ""){                           
+                            return ((record.data.sampleChangerLocation - 1)  %3) + 1;
+                        }                        
+                    }
+                     return record.data.sampleChangerLocation;
+                }
+            },     
+            {
+                header: 'Absolute position',
+                dataIndex: 'sampleChangerLocation',
+                flex: 1,
+                type: 'text',
+                tdCls: 'scl-cell',
+                hidden : true
             }       
         ],
         viewConfig: {
@@ -196,13 +236,15 @@ ContainerPrepareSpreadSheet.prototype.getPanel = function() {
                 if (record.get('containerType') != "Unipuck" && record.get('containerType') != "Spinepuck"){
                     return "disabled-row";
                 }
-                if (record.get('sampleChangerLocation') == "" || record.get('sampleChangerLocation') == " " || record.get('sampleChangerLocation') == null ) {
+                /*if (record.get('sampleChangerLocation') == "" || record.get('sampleChangerLocation') == " " || record.get('sampleChangerLocation') == null ) {
                     return "warning-row";
-                }
+                }*/
+
+                /** This ckecks if there is a conflict. Same beamline and position */
                 for (var i = 0 ; i < _this.containers.length ; i++){
                     var dewar = _this.containers[i];
                     if (record.get('containerId') != dewar.containerId && dewar.beamlineLocation == record.get('beamlineName')) {
-                        if (record.get('sampleChangerLocation') == dewar.sampleChangerLocation){
+                        if (record.get('sampleChangerLocation') == dewar.sampleChangerLocation && dewar.sampleChangerLocation != ""){                        
                             return "puck-error";
                         }
                     }
@@ -319,7 +361,8 @@ ContainerPrepareSpreadSheet.prototype.load = function(containers, sampleChangerW
     }
     var data = [];
     var error = false;
-    //Parse data
+    
+    
     for (var i = 0 ; i < containers.length ; i++) {
         var container = containers[i];
         if (container.containerId){
@@ -343,9 +386,10 @@ ContainerPrepareSpreadSheet.prototype.load = function(containers, sampleChangerW
                 containerId : container.containerId,
                 capacity : container.capacity
             });
-        } else {
+        } 
+        /*else {
             error = true;
-        }
+        }*/
     }
 
     if (error){

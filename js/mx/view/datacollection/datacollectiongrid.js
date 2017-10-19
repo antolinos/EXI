@@ -90,6 +90,7 @@ DataCollectionGrid.prototype._getAutoprocessingStatistics = function(data) {
     var cell_gamma = getArrayValues(data.Autoprocessing_cell_gamma);
 
     var anomalous = getArrayValues(data.Autoprocessing_anomalous);
+    
 
     data = {};
     /** Returning if no autoprocs */
@@ -107,7 +108,7 @@ DataCollectionGrid.prototype._getAutoprocessingStatistics = function(data) {
                 anomalous: anomalous[i]
             };
         }
-        
+        debugger
         data[autoProcIds[i]][scalingStatisticsTypes[i]] = ({
             autoProcId: autoProcIds[i],
             scalingStatisticsType: scalingStatisticsTypes[i],
@@ -135,7 +136,9 @@ DataCollectionGrid.prototype._getAutoprocessingStatistics = function(data) {
         result.push(data[ids[i]]);
     }
     /** Rank results when anomouls is 0 */
+    
     return new AutoprocessingRanker().rank(_.filter(result, {anomalous : '0'}), "spaceGroup");  
+    //return new AutoprocessingRanker().rank(result, "spaceGroup");  
 };
 
 

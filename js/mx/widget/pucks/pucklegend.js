@@ -38,11 +38,13 @@ function PuckLegend(args){
         circles.push({cx : "27%", cy : cy, r : rad, cls : "cell_collected", text : "COLLECTED"});
         circles.push({cx : "47%", cy : cy, r : rad, cls : "cell_filled", text : "FILLED"});
         circles.push({cx : "67%", cy : cy, r : rad, cls : "cell_selected", text : "SELECTED"});
+        circles.push({cx : "87%", cy : cy, r : rad, cls : "cell_recovery", text : "PIN RECOVERY"});
 } else if (this.style == "vertical") {
-        circles.push({cy : "7%", cx : cy, r : rad, cls : "cell_empty", text : "EMPTY"});
+        circles.push({cy : "7%",  cx : cy, r : rad, cls : "cell_empty", text : "EMPTY"});
         circles.push({cy : "27%", cx : cy, r : rad, cls : "cell_collected", text : "COLLECTED"});
         circles.push({cy : "47%", cx : cy, r : rad, cls : "cell_filled", text : "FILLED"});
         circles.push({cy : "67%", cx : cy, r : rad, cls : "cell_selected", text : "SELECTED"});
+        circles.push({cy : "87%", cx : cy, r : rad, cls : "cell_recovery", text : "RECOVERY"});
     }
 
     this.data = {

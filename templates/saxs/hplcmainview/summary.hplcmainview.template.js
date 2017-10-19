@@ -9,9 +9,7 @@
                         <th>I0</th>                        
                         <th>Rg</th>
                         <th>Mass</th>
-                        <th>Vc</th>
-                        <th>Qr</th>
-                        <th>Quality</th>
+                      
                         <th>Download</th>
                     </tr>
                 </thead>
@@ -21,10 +19,7 @@
                         <td>{.frame}</td>
                         <td> {@decimal key="I0" decimals=1}{/decimal}</td>                        
                         <td>{@decimal key="Rg" decimals=1}{/decimal}</td>    
-                        <td>{@decimal key="Mass" decimals=1}{/decimal}</td>  
-                        <td>{@decimal key="Vc" decimals=1}{/decimal}</td>  
-                        <td>{@decimal key="Qr" decimals=1}{/decimal}</td>  
-                        <td>{@decimal key="quality" decimals=1}{/decimal}</td> 
+                        <td>{@decimal key="Mass" decimals=1}{/decimal}</td>                          
                         <td> <a href="{.downloadURL}">
                                 <span class="glyphicon glyphicon-download" style='font-size:14px;'></span>
                             </a>  </td> 

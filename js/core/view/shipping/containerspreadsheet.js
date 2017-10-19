@@ -47,6 +47,7 @@ ContainerSpreadSheet.prototype.updateNumberOfRows  = SpreadSheet.prototype.updat
 ContainerSpreadSheet.prototype.emptyRow  = SpreadSheet.prototype.emptyRow;
 
 ContainerSpreadSheet.prototype.load = function(puck){
+	
 	var _this = this;
 	this.puck = puck;
 	var container = document.getElementById(this.id + '_samples');
@@ -181,6 +182,8 @@ ContainerSpreadSheet.prototype.getSamplesData = function(puck) {
                 if (diffraction == null){
                     diffraction = {};
                 }
+				var forceSpaceGroup = null;
+				
                 data.push(
                     [
                         // crystal.crystalId,
@@ -188,7 +191,7 @@ ContainerSpreadSheet.prototype.getSamplesData = function(puck) {
                         protein.acronym, sample.name, this.getCrystalInfo(crystal), diffraction.experimentKind, sample.BLSample_code ,  getValue(diffraction["observedResolution"]),  diffraction.requiredResolution, diffraction.preferredBeamDiameter, 
                         diffraction.numberOfPositions, diffraction.radiationSensitivity, diffraction.requiredMultiplicity, diffraction.requiredCompleteness,
 						// this.getUnitCellInfo(crystal),
-						crystal.spaceGroup, sample.smiles, sample.comments
+						diffraction.forcedSpaceGroup, sample.smiles, sample.comments
                     ]
                 );
         }
@@ -223,12 +226,13 @@ ContainerSpreadSheet.prototype.getHeader = function() {
                                                                                     }
             }, 
             { text :'Sample<br /> Name', id :'Sample Name', column : {width : 120}}, 
-            { text :'Crystal<br /> Form', id : 'Crystal Form',column : {
-                                                                        width : 250,
+            { text :'Crystal Form', id : 'Crystal Form',column : {
+                                                                        width : 230,
                                                                         type: 'dropdown',
                                                                         source: function(query, process) {
-                                                                            var colIndex = _this.getColumnIndex("Protein Acronym");
+                                                                            var colIndex = _this.getColumnIndex("Protein Acronym");																			
                                                                             var protein = EXI.proposalManager.getProteinByAcronym(this.instance.getDataAtCell(this.row,colIndex));
+
                                                                             if (protein.length > 0){																				
                                                                                 process(_this.getCrystalInfoByProtein(protein[0]));
                                                                             } else {
@@ -238,9 +242,9 @@ ContainerSpreadSheet.prototype.getHeader = function() {
                                                                     }
                                                                 }, 
             { text :'Exp.<br /> Type', id : 'Experiment Type', column : {
-                                                                        width : 80,  
+                                                                        width : 100,  
                                                                         type: 'dropdown',
-                                                                        source: [ "Default", "MXPressE", "MXPressO", "MXPressI", "MXPressE_SAD", "MXScore", "MXPressM" ]
+                                                                        source: [ "Default", "MXPressE", "MXPressO", "MXPressI", "MXPressE_SAD", "MXScore", "MXPressM", "MXPressP", "MXPressP_SAD" ]
                                                                     }
             }, 
             { text :'Pin <br />BarCode', id : 'Pin BarCode', column : {width : 60}},  
@@ -249,10 +253,17 @@ ContainerSpreadSheet.prototype.getHeader = function() {
             { text :'Beam <br />Diameter', id :'Pref. Diameter',column : {width : 60}}, 
             { text :'Number of<br /> positions', id :'Number Of positions', column : {width : 80}}, 
             { text :'Radiation<br /> Sensitivity', id :'Radiation Sensitivity', column : {width : 80}}, 
-            { text :'Required<br /> Multiplicity', id :'Required multiplicity', column : {width : 60}}, 
-            { text :'Required<br /> Completeness', id :'Required Completeness', column : {width : 80}}, 
-            // { text :'Unit Cell', id :'Unit cell', column : {width : 150, renderer: disabledRenderer, editor : false, readOnly: true}}, 
-            { text :'Force<br />SG', id :'Space Group', column : {width : 55, renderer: disabledRenderer, editor : false, readOnly: true}}, 
+
+            { text :'Required<br /> multiplicity', id :'Required multiplicity', column : {width : 60}}, 
+            { text :'Required<br /> Completeness', id :'Required Completeness', column : {width : 80}},            
+            
+			  { text :'Forced <br /> Space G.', id : 'Space Group', column : {
+                                                                        width : 55,  
+                                                                        type: 'dropdown',
+																		source: _.concat([""], ExtISPyB.spaceGroups)
+                                                                    }
+            }, 
+
             { text :'Smiles', id :'Smiles', column : {width : 140}}, 
             { text :'Comments', id :'Comments', column : {width : 200}}
             ];
@@ -323,6 +334,7 @@ ContainerSpreadSheet.prototype.getPuck = function() {
 		sample["diffractionPlanVO"]["preferredBeamDiameter"]= Number(rows[i]["Pref. Diameter"]);
 		sample["diffractionPlanVO"]["numberOfPositions"]= Number(rows[i]["Number Of positions"]);
 		sample["diffractionPlanVO"]["experimentKind"]= rows[i]["Experiment Type"];
+		sample["diffractionPlanVO"]["forcedSpaceGroup"]= rows[i]["Space Group"];
 		aux.push(sample);
 		
 	}
@@ -351,6 +363,7 @@ ContainerSpreadSheet.prototype.getProteinsByAcronym = function(acronym) {
 * @param {Integer} row The corresponding row
 */
 ContainerSpreadSheet.prototype.parseCrystalFormColumn = function (dataAtCrystalFormColumn,row) {
+	
 	var parsed = {
 					spaceGroup 	: null,
 					cellA		: null,
@@ -405,6 +418,7 @@ ContainerSpreadSheet.prototype.parseCrystalFormColumn = function (dataAtCrystalF
 			}
 		}
 	}
+	
 	return parsed;
 };
 
@@ -499,24 +513,19 @@ ContainerSpreadSheet.prototype.populateCrystalFormButton = function (row, column
 };
 
 ContainerSpreadSheet.prototype.updateCrystalGroup = function (row, crystal) {
-    console.log("updateCrystalGroup");
+   
     if (crystal) {
-        this.setDataAtCell(row,this.crystalFormIndex,this.getCrystalInfo(crystal));        
-        this.setDataAtCell(row,this.spaceGroupIndex,crystal.spaceGroup);        
+        this.setDataAtCell(row,this.crystalFormIndex,this.getCrystalInfo(crystal));                 
         this.addEditCrystalFormButton(row);
     } else {
         this.resetCrystalGroup(row);
     }
-	console.log("-->updateCrystalGroup");
+	
 };
 
 ContainerSpreadSheet.prototype.resetCrystalGroup = function (row) {
-	console.log("resetCrystalGroup");
-	
 	this.setDataAtCell(row,this.crystalFormIndex,"");
-	// this.setDataAtCell(row,this.unitCellIndex,"");
 	this.setDataAtCell(row,this.spaceGroupIndex,"");
-	// this.setDataAtCell(row,0,"");
 	
 	this.populateCrystalFormButton(row,this.getColumnIndex("editCrystalForm"),"");
 	console.log("->resetCrystalGroup");
@@ -687,6 +696,7 @@ ContainerSpreadSheet.prototype.isCrystalFormAvailable = function (parsedCrystalF
 * @return {Array} Returns an array of strings with the crystal info to be loaded on the Crystal Form column
 */
 ContainerSpreadSheet.prototype.getCrystalInfoByProtein = function (protein) {	
+		
 	if (this.crystalFormList[protein.acronym] == null){
 		var src = [];
 		if (protein){
@@ -699,7 +709,9 @@ ContainerSpreadSheet.prototype.getCrystalInfoByProtein = function (protein) {
 				}
 			}
 		}		
-		this.crystalFormList[protein.acronym] = _.union(src,["NEW"]);
+		
+		this.crystalFormList[protein.acronym] = _.union(["NEW"], src.sort());
 	}
+
 	return this.crystalFormList[protein.acronym];
 };

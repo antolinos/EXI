@@ -66,6 +66,7 @@ UncollapsedDataCollectionGrid.prototype.displayDataCollectionTab = function(targ
             // URL to image quality indicators
             value.urlImageQualityIndicators = EXI.getDataAdapter().mx.dataCollection.getQualityIndicatorPlot(value.dataCollectionId);
             // Result from auto-processing>                     
+            
             value.onlineresults = UncollapsedDataCollectionGrid.prototype._getAutoprocessingStatistics(value);
             if (value.onlineresults && value.onlineresults.length > 0){
                 value.bestAutoprocIntegrationId = value.onlineresults[0].autoProcIntegrationId;

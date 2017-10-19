@@ -105,7 +105,9 @@ DewarListSelectorGrid.prototype.getSelectedData = function() {
 
 DewarListSelectorGrid.prototype.getStore = function(){
     this.store = Ext.create('Ext.data.Store', {
-        fields:['beamlineLocation', 'storageLocation','containerStatus','containerType','sessionStartDate','creationDate','beamLineOperator','shippingStatus','shippingName', 'barCode', 'beamlineName', 'dewarCode', 'dewarStatus', 'sampleChangerLocation', 'sampleCount', 'sessionStartDate', 'type'],
+        fields:['beamlineLocation', 
+                'storageLocation','containerStatus','containerType','sessionStartDate','creationDate','beamLineOperator','shippingStatus','shippingName', 'barCode', 'beamlineName', 
+                'dewarCode', 'dewarStatus', 'sampleChangerLocation', 'sampleCount', 'sessionStartDate', 'type'],
         sortInfo: { field: "creationDate", direction: "DESC" },
         sorters:
                 {

@@ -48,23 +48,12 @@ function HPLCMainView() {
 					shortText : g.lastx_,
 					text : g.lastx_,
 					attachAtBottom : true });
-                    /*_this.annotations= [({
-					series : g.selPoints_[0].name,
-					x : g.lastx_,
-					width : 30,
-					height : 23,
-					tickHeight : 2,
-					shortText : g.lastx_,
-					text : g.lastx_,
-					attachAtBottom : true })];*/
+                   
 				g.setAnnotations(_this.annotations);
                 
                 /** Summary Panel */
                 _this.summary.push({
-                        frame :  g.lastx_,
-                        quality : _.find(_this.hplcGraph.hplcData, {param : 'quality'}).data[g.lastx_],
-                        Qr : _.find(_this.hplcGraph.hplcData, {param : 'Qr'}).data[g.lastx_],
-                        Vc : _.find(_this.hplcGraph.hplcData, {param : 'Vc'}).data[g.lastx_],
+                        frame :  g.lastx_,                   
                         Mass : _.find(_this.hplcGraph.hplcData, {param : 'Mass'}).data[g.lastx_],
                         Rg : _.find(_this.hplcGraph.hplcData, {param : 'Rg'}).data[g.lastx_],
                         I0 : _.find(_this.hplcGraph.hplcData, {param : 'I0'}).data[g.lastx_],
@@ -216,22 +205,9 @@ HPLCMainView.prototype.loadHPLCGraph = function(experimentId) {
 			data : data.mass,
 			std : data.mass_Stdev,
 			color : '#FF9900',
-			label : "Mass" }, {
-			param : "Vc",
-			data : data.Vc,
-			std : data.Vc_Stdev,
-			color : '#990099',
-			label : "Vc" }, {
-			param : "Qr",
-			data : data.Qr,
-			std : data.Qr_Stdev,
-			color : '#FF0066',
-			label : "Qr" }, {
-			param : "quality",
-			label : "quality",
-			color : "#FF00FF",
-			data : data.quality,
-			std : zeroArray } ];
+			label : "Mass" }
+		
+			 ];
 		_this.hplcGraph.loadData(data, experimentId);
         
 	};

@@ -194,8 +194,10 @@ PuckWidget.prototype.load = function (data) {
 	for (sampleIndex in data){
 		var sample = data[sampleIndex];
 		if (!sample.hasError){
+			
 			var id = this.id + "-" + sample.location;
-			var cellIndex = this.findCellIndexById(id);
+			
+			var cellIndex = this.findCellIndexById(id);				
 			this.data.cells[cellIndex].state = sample.state;
 			this.data.cells[cellIndex].selected = sample.selected;
 			this.data.cells[cellIndex].sample_name = sample.sample_name;

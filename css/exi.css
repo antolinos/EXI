@@ -397,6 +397,15 @@ img.border-img {
 	/*stroke-dasharray:3;*/ 
 }
 
+
+
+.puck-recovery {
+	fill : red !important;
+	stroke-opacity : 0.2 !important;
+	fill-opacity : 1 !important;
+	cursor : no-drop !important;
+}
+
 .puck-always-disabled {
 	cursor : no-drop !important;
 	fill-opacity : 0.2 !important;
@@ -450,7 +459,9 @@ img.border-img {
 	stroke-opacity : 0.2 !important;
 	stroke-dasharray:1;
 }
-
+.cell_recovery{
+	fill: red;
+}
 .cell_empty {
 	stroke-opacity : 0.3 !important;
 	fill: lightgray;
