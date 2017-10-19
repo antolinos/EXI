@@ -46,7 +46,7 @@ MXMainMenu.prototype.getMenuItems = function() {
 		}, 
 		
 		{
-			text : this._convertToHTMLWhiteSpan("<button type='button' class='btn btn-default'> <span class='glyphicon glyphicon-refresh'></span> ISPyB</button>"),
+			text : this._convertToHTMLWhiteSpan("<button type='button' class='btn btn-default'> <span class='glyphicon glyphicon-refresh'></span> SMIS</button>"),
 			cls : 'ExiSAXSMenuToolBar',			
 			handler : function(){
 				EXI.setLoadingMainPanel("Synch is running");
