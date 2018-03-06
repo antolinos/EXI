@@ -11,7 +11,7 @@
             <td colspan='3' style="text-align:center;" class="sessiogridtechnique">
                BIOSAXS
             </td>
-             <td colspan='2' style="text-align:center;" class="sessiogridtechnique">
+             <td style="text-align:center;" class="sessiogridtechnique">
                EM
             </td>
              <td style='width:400px'>
@@ -57,10 +57,7 @@
                HPLC
             </td>
             <td style="text-align:center;" class="emsessiongridheader">
-               Grid
-            </td>
-            <td style="text-align:center;" class="emsessiongridheader">
-               Movie
+               Gridsquares
             </td>
             <td style='width:400px;' > 
                Comments
@@ -147,14 +144,6 @@
                <div style="text-align:center;">
                   {@gt key=EMdataCollectionGroupCount value=0}                               
                   <span style="background-color:#207a7a;" class="badge">{.EMdataCollectionGroupCount}</span>                        
-                  {/gt}
-               </div>
-               </a>
-            </td>
-            <td  class="emsessiongridcell">
-               <div style="text-align:center;">
-                  {@gt key=EMdataCollectionGroupCount value=0}                               
-                  <span style="background-color:#207a7a;" class="badge">{.imagesCount}</span>                        
                   {/gt}
                </div>
                </a>

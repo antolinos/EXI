@@ -44,16 +44,17 @@ WorkflowController.prototype.init = function() {
 		EXI.getDataAdapter({onSuccess : onSuccess}).mx.workflowstep.getWorkflowstepByIdList(this.params['workflowStepIdList']);
 	}).enter(this.setPageBackground);
     
-    	Path.map("#/mx/workflow/steps/:workflowStepIdList/step/:workflowStepId/main").to(function() {
+    	Path.map("#/mx/workflow/:workflowId/steps/:workflowStepIdList/step/:workflowStepId/main").to(function() {
             
-            var workflowStepId = this.params['workflowStepId'];
-		EXI.clearNavigationPanel();
-		EXI.setLoadingNavigationPanel(true);
-		listView = new WorkflowStepListView();
-		listView.onSelect.attach(function(sender, selected) {
-			if (selected != null){
-				mainView.load(selected[0]);
-			}
+			var workflowId = this.params['workflowId'];
+			var workflowStepId = this.params['workflowStepId'];
+			EXI.clearNavigationPanel();
+			EXI.setLoadingNavigationPanel(true);
+			listView = new WorkflowStepListView(workflowId);
+			listView.onSelect.attach(function(sender, selected) {
+				if (selected != null){
+					mainView.load(selected[0]);
+				}
 		});
 		EXI.addNavigationPanel(listView);    
 

@@ -59,7 +59,15 @@ AutoProcIntegrationGrid.prototype.parseData = function(data) {
                 }
                 fileName = fileName + "_" +  data[i].v_datacollection_processingPrograms + ".zip"; 
                 data[i].downloadFilesUrl = EXI.getDataAdapter().mx.autoproc.downloadAttachmentListByautoProcProgramsIdList(data[i].v_datacollection_summary_phasing_autoProcProgramId, fileName);
-            }                                             
+            }
+            data[i].processingStatus = data[i].v_datacollection_processingStatus;
+            if (data[i].processingStatus == "RUNNING") {
+            	var startTime = new Date(data[i].v_datacollection_processingStartTime);
+            	var elapsed = Date.now() - startTime;
+            	if (elapsed > 14400000) { // Four hours, 4*3600*1000
+            		data[i].processingStatus = "TIMEOUT";
+            	}
+            }
          }       
          catch(e){             
              console.log(e);

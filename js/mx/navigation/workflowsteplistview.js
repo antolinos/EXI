@@ -1,4 +1,5 @@
-function WorkflowStepListView(){
+function WorkflowStepListView(workflowId){
+	this.workflowId=workflowId;
 	ListView.call(this);
 }
 
@@ -23,7 +24,7 @@ WorkflowStepListView.prototype.getFilter = function(value){
 WorkflowStepListView.prototype.getColumns = function(){
 	var _this = this;
 	return  [
-		        { text: 'Workflows',  flex: 1, dataIndex: 'bufferId', 
+		        { text: 'Workflows <a href="' + EXI.getDataAdapter().mx.workflow.getWorkflowLogUrl(this.workflowId) + '">(view log)</a>',  flex: 1, dataIndex: 'bufferId', 
 		        	renderer : function(list, token, record){
 		        		return _this.getRow(record);
 		        } }

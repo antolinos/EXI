@@ -31,10 +31,11 @@
                </tr>
             </thead>  
             {#.}
-                  {@select key=v_datacollection_processingStatus}
+                  {@select key=processingStatus}
                         {@eq value="SUCCESS"} {>"success.collapsed.autoprocintegrationgrid.template" /}  {/eq}
                         {@eq value="RUNNING"} {>"running.collapsed.autoprocintegrationgrid.template" /} {/eq}
                         {@eq value="FAILED"} {>"failed.collapsed.autoprocintegrationgrid.template" /} {/eq}
+                        {@eq value="TIMEOUT"} {>"timeout.collapsed.autoprocintegrationgrid.template" /} {/eq}
                         {@eq value="1"} {>"success.collapsed.autoprocintegrationgrid.template" /} {/eq}
                         {@eq value="0"} {>"failed.collapsed.autoprocintegrationgrid.template" /} {/eq}
                   {/select}

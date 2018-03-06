@@ -182,7 +182,7 @@ UncollapsedDataCollectionGrid.prototype.displayResultAutoprocessingTab = functio
 };
 
 /**
-* Displays the data worflows tab
+* Displays the data workflows tab
 *
 * @param {Object} target HTML node where the content will be rendered
 * @param {Integer} dataCollectionId 
@@ -194,7 +194,10 @@ UncollapsedDataCollectionGrid.prototype.displayWorkflowsTab = function(target, d
     if (dc){
         var html = "";
         var items = (new WorkflowSectionDataCollection().parseWorkflow(dc));
-        dust.render("workflows.mxdatacollectiongrid.template",  {items : items, dataCollectionId : dataCollectionId}, function(err, out) {
+        var workflowId = dc.Workflow_workflowId;
+        var workflowLogUrl = EXI.getDataAdapter().mx.workflow.getWorkflowLogUrl(dc.Workflow_workflowId);
+        _.map(items, function(item){item.workflowId = workflowId;});
+        dust.render("workflows.mxdatacollectiongrid.template",  {items : items, dataCollectionId : dataCollectionId, workflowId : workflowId, workflowLogUrl : workflowLogUrl}, function(err, out) {
                         html = html + out;
         });
         $(target).html(html);
@@ -203,7 +206,7 @@ UncollapsedDataCollectionGrid.prototype.displayWorkflowsTab = function(target, d
 };
 
 /**
-* Displays the data worflows tab
+* Displays the phasing tab
 *
 * @param {Object} target HTML node where the content will be rendered
 * @param {Integer} dataCollectionGroupId 

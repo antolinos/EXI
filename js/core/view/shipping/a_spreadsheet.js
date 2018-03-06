@@ -43,7 +43,11 @@ SpreadSheet.prototype.setLoading = function (bool) {
 
 SpreadSheet.prototype.getAcronyms = function() {
 	if (this.acronyms == null){		
-		this.acronyms = _.map(EXI.proposalManager.getProteins(), 'acronym').sort();;	
+		this.acronyms = _.map(EXI.proposalManager.getProteins(), 'acronym').sort(function(a, b) {
+			if (a.toLowerCase() < b.toLowerCase()) return -1;
+			if (a.toLowerCase() > b.toLowerCase()) return 1;
+			return 0;
+		});		
 	}
 	return this.acronyms;
 };

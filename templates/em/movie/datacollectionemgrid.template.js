@@ -49,14 +49,8 @@
             </tr>
             <tr>
                <td>X, Y</td>
-               <td class='column_parameter_value'>{@decimal key="Movie_positionX" decimals=3 /}, {@decimal key="Movie_positionY" decimals=3 /}</td>
+               <td class='column_parameter_value'>{@decimal key="Movie_positionX" decimals=6 /}, {@decimal key="Movie_positionY" decimals=6 /}</td>
             </tr>
-         
-                    
-            <tr>
-               <td>Dose</td>
-               <td class='column_parameter_value'>{@decimal key="Movie_dosePerImage" decimals=4 /}</td>
-            </tr>                      
          </table> 
       </div>
        <div class="col-sm-1">

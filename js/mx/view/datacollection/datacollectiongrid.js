@@ -324,7 +324,6 @@ DataCollectionGrid.prototype.parseEMData =  function(data){
                 
                 var motionCount =  getMotionCorrectionByDataCollectionId(dataCollectionList[i], motionCorrectionsCount, motionCorrectionDataCollectionIds);
                 var ctfCount =  getMotionCorrectionByDataCollectionId(dataCollectionList[i], ctfsCount, ctfDataCollectionIds);
-                debugger
                 gridSquares.push({
                     name : i + 1,
                     movieCount : moviesCount[i],

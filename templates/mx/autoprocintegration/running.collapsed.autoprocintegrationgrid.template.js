@@ -7,5 +7,5 @@
 		  {/eq} 
 	</td>
 	<td >{.v_datacollection_processingPrograms}</td>
-	<td colspan="20" align="center" > <kbd style="background-color:blue">{.v_datacollection_processingStatus}</kbd></td>
+	<td colspan="20" align="center" > <kbd style="background-color:blue">{.processingStatus}</kbd></td>
 </tr>
